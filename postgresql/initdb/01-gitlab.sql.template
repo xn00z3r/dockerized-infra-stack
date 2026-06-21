@@ -1,0 +1,22 @@
+-- =============================================================================
+-- 01-gitlab.sql.template — PostgreSQL Init: GitLab Database
+-- Template: di-render ke 01-gitlab.sql oleh make init via envsubst
+-- 01-gitlab.sql (hasil render, berisi password) di-gitignore
+--
+-- Dieksekusi SEKALI saat data directory kosong (fresh start)
+-- Dijalankan sebagai superuser (POSTGRES_USER)
+-- =============================================================================
+
+-- Buat user GitLab
+CREATE USER ${GITLAB_DB_USER} WITH PASSWORD '${GITLAB_DB_PASSWORD}';
+
+-- Buat database GitLab dengan encoding UTF8
+CREATE DATABASE ${GITLAB_DB_NAME}
+  OWNER ${GITLAB_DB_USER}
+  ENCODING 'UTF8'
+  LC_COLLATE 'en_US.UTF-8'
+  LC_CTYPE 'en_US.UTF-8'
+  TEMPLATE template0;
+
+-- Grant semua privilege ke user GitLab
+GRANT ALL PRIVILEGES ON DATABASE ${GITLAB_DB_NAME} TO ${GITLAB_DB_USER};

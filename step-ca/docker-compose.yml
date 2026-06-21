@@ -1,0 +1,77 @@
+# =============================================================================
+# step-ca — Internal PKI Certificate Authority
+# Image: smallstep/step-ca:0.30.2
+# Domain: resolute-ca.${BASE_DOMAIN}
+# Network: infra-proxy-net
+# =============================================================================
+x-container-defaults: &container-defaults
+  restart: unless-stopped
+
+x-default-networking: &default-networking
+  dns:
+    - ${INFRA_DNS_SERVER}
+
+services:
+  step-ca:
+    <<:
+      - *container-defaults
+      - *default-networking
+
+    image: smallstep/step-ca:0.30.2
+    container_name: step-ca
+
+    env_file:
+      - ../_shared/.env
+
+    environment:
+      DOCKER_STEPCA_INIT_NAME: "${STEPCA_NAME}"
+      DOCKER_STEPCA_INIT_DNS_NAMES: "${STEPCA_DNS}"
+      DOCKER_STEPCA_INIT_ADDRESS: "${STEPCA_ADDRESS}"
+      DOCKER_STEPCA_INIT_PROVISIONER_NAME: "${STEPCA_PROVISIONER}"
+      DOCKER_STEPCA_INIT_REMOTE_MANAGEMENT: "true"
+      DOCKER_STEPCA_INIT_ACME: "true"
+
+    volumes:
+      - ./data:/home/step
+
+    networks:
+      - infra-proxy-net
+
+    mem_limit: ${STEPCA_MEM_LIMIT}
+    
+    cpus: ${STEPCA_CPUS}
+    
+    healthcheck:
+      # N01 FIX: Gunakan 'step ca health' (step CLI PASTI ada di smallstep/step-ca image)
+      # --ca-url : URL CA server di dalam container
+      # --root   : root CA cert untuk TLS verification (tersimpan di /home/step/certs/)
+      # Exit 0   : CA API healthy dan merespons
+      # Exit non-0: CA belum ready atau error
+      test: ["CMD", "step", "ca", "health",
+             "--ca-url", "https://localhost:9000",
+             "--root", "/home/step/certs/root_ca.crt"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.step-ca.rule=Host(`resolute-ca.${BASE_DOMAIN}`)"
+      - "traefik.http.routers.step-ca.entrypoints=websecure"
+      # B04 FIX: certresolver agar Traefik request cert untuk resolute-ca.${BASE_DOMAIN}
+      - "traefik.http.routers.step-ca.tls.certresolver=step-ca"
+      # B07-style: explicit service association
+      - "traefik.http.routers.step-ca.service=step-ca"
+      # step-ca backend berbicara HTTPS di port 9000
+      - "traefik.http.services.step-ca.loadbalancer.server.port=9000"
+      - "traefik.http.services.step-ca.loadbalancer.server.scheme=https"
+      # ServersTransport agar Traefik trust internal CA saat proxy ke step-ca backend
+      - "traefik.http.services.step-ca.loadbalancer.serversTransport=step-ca-transport@file"
+      # ---- Observability ----
+      # - "logging=promtail"
+      # - "logging_jobname=step-ca"
+
+networks:
+  infra-proxy-net:
+    external: true

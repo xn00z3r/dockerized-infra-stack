@@ -1,0 +1,73 @@
+# =============================================================================
+# seaweedfs — S3-Compatible Object Storage
+# Image: chrislusf/seaweedfs:4.33_full
+# Domain: resolute-s3.${BASE_DOMAIN}
+# Network: infra-proxy-net + infra-backend-net
+# Topology: Single-node (master + volume + filer + S3 dalam satu container)
+# =============================================================================
+
+x-service-defaults: &service-defaults
+  restart: unless-stopped
+  env_file:
+    - ../_shared/.env
+
+x-dual-network-dns-defaults: &dual-network-dns-defaults
+  networks:
+    - infra-proxy-net
+    - infra-backend-net
+  dns:
+    - ${INFRA_DNS_SERVER}
+
+services:
+  seaweedfs:
+    <<: [*service-defaults, *dual-network-dns-defaults]
+
+    image: chrislusf/seaweedfs:4.33_full
+    container_name: seaweedfs
+
+    # ENTRYPOINT image = weed binary; command di bawah menjadi: weed server ...
+    command: >
+      server
+      -s3
+      -s3.config=/etc/seaweedfs/s3.json
+      -dir=/data
+      -ip.bind=0.0.0.0
+      -master.volumeSizeLimitMB=1024
+      -filer
+      -filer.maxMB=256
+
+    volumes:
+      - ./data:/data
+      - ./config/s3.json:/etc/seaweedfs/s3.json:ro
+
+    mem_limit: ${SEAWEEDFS_MEM_LIMIT}
+    cpus: ${SEAWEEDFS_CPUS}
+
+    healthcheck:
+      # N02 FIX: Gunakan wget (BusyBox wget — reliable di Alpine-based images)
+      # curl tidak guaranteed ada di chrislusf/seaweedfs Alpine image
+      # Master API /cluster/status return JSON dengan field 'IsLeader'
+      # Field ini case-sensitive: 'IsLeader' (kapital I dan L)
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9333/cluster/status 2>/dev/null | grep -q 'IsLeader'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.seaweedfs.rule=Host(`resolute-s3.${BASE_DOMAIN}`)"
+      - "traefik.http.routers.seaweedfs.entrypoints=websecure"
+      - "traefik.http.routers.seaweedfs.tls.certresolver=step-ca"
+      - "traefik.http.routers.seaweedfs.service=seaweedfs"
+      # Port 8333 = S3 API gateway
+      - "traefik.http.services.seaweedfs.loadbalancer.server.port=8333"
+      # ---- Observability ----
+      # - "logging=promtail"
+      # - "logging_jobname=seaweedfs"
+
+networks:
+  infra-proxy-net:
+    external: true
+  infra-backend-net:
+    external: true

@@ -1,0 +1,51 @@
+# =============================================================================
+# mysql — Database Server
+# Image: mysql:9.7
+# Network: infra-backend-net ONLY (tidak pernah di-expose ke luar)
+# Akses dari luar VM: SSH tunnel → ssh -L 3306:localhost:3306 dts@192.168.1.241
+# =============================================================================
+x-service-defaults: &service-defaults
+  restart: unless-stopped
+  env_file:
+    - ../_shared/.env
+
+x-backend-network-dns-defaults: &backend-network-dns-defaults
+  networks:
+    - infra-backend-net
+  dns:
+    - ${INFRA_DNS_SERVER}
+
+services:
+  mysql:
+    <<: [*service-defaults, *backend-network-dns-defaults]
+    image: mysql:9.7
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+      MYSQL_DATABASE: "default_db"
+    volumes:
+      - ./data:/var/lib/mysql
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - ./config/my.cnf:/etc/mysql/conf.d/custom.cnf:ro
+    mem_limit: ${MYSQL_MEM_LIMIT}
+    cpus: ${MYSQL_CPUS}
+    healthcheck:
+      # Dua-tahap:
+      # 1. mysqladmin ping: MySQL menerima koneksi
+      # 2. SHOW DATABASES: dapat eksekusi query aktual (eliminasi false positive)
+      # Double $$ mencegah Docker Compose interpolasi prematur variabel $$
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD && mysql -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD -e 'SHOW DATABASES;' > /dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    # Tidak ada labels Traefik — MySQL tidak di-expose via HTTP/HTTPS
+    # Tidak ada ports mapping — internal only
+    # ---- Observability (uncomment saat Loki/Prometheus stack deployed) ----
+    # labels:
+    #   - "logging=promtail"
+    #   - "logging_jobname=mysql"
+
+networks:
+  infra-backend-net:
+    external: true

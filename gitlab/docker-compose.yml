@@ -1,0 +1,185 @@
+# =============================================================================
+# gitlab — SCM Server (GitLab Community Edition)
+# Image: gitlab/gitlab-ce:19.0.1-ce.0
+# Domain: resolute-gitlab.${BASE_DOMAIN}, resolute-registry.${BASE_DOMAIN}
+# Network: infra-proxy-net + infra-backend-net + infra-devops-net
+# SSH: host port ${GITLAB_SSH_PORT} (2222) → container port 22
+# =============================================================================
+x-service-defaults: &service-defaults
+  restart: unless-stopped
+  env_file:
+    - ../_shared/.env
+
+x-triple-network-dns-defaults: &triple-network-dns-defaults
+  networks:
+    - infra-proxy-net
+    - infra-backend-net
+    - infra-devops-net
+  dns:
+    - ${INFRA_DNS_SERVER}
+
+services:
+  gitlab:
+    <<:
+      - *service-defaults
+      - *triple-network-dns-defaults
+    image: gitlab/gitlab-ce:19.0.1-ce.0
+    container_name: gitlab
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        ## External URL & nginx (behind Traefik)
+        external_url 'https://resolute-gitlab.${BASE_DOMAIN}'
+
+        nginx['listen_port'] = 80
+        nginx['listen_https'] = false
+        nginx['proxy_set_headers'] = {
+          "X-Forwarded-Proto" => "https",
+          "X-Forwarded-Ssl" => "on",
+          "X-Forwarded-For" => "$$proxy_add_x_forwarded_for",
+          "Host" => "$$http_host"
+        }
+
+        ## SSH
+        gitlab_rails['gitlab_shell_ssh_port'] = ${GITLAB_SSH_PORT}
+
+        ## Timezone
+        gitlab_rails['time_zone'] = '${TZ}'
+
+        ## Initial root password (hanya efektif saat pertama kali init)
+        gitlab_rails['initial_root_password'] = '${GITLAB_ROOT_PASSWORD}'
+        gitlab_rails['initial_shared_runners_registration_token'] = ''
+
+        ## ============================================================
+        ## External PostgreSQL — bundled PostgreSQL dinonaktifkan
+        ## ============================================================
+        postgresql['enable'] = false
+        gitlab_rails['db_adapter'] = 'postgresql'
+        gitlab_rails['db_encoding'] = 'utf8'
+        gitlab_rails['db_host'] = 'postgresql'
+        gitlab_rails['db_port'] = 5432
+        gitlab_rails['db_database'] = '${GITLAB_DB_NAME}'
+        gitlab_rails['db_username'] = '${GITLAB_DB_USER}'
+        gitlab_rails['db_password'] = '${GITLAB_DB_PASSWORD}'
+
+        ## ============================================================
+        ## Email via Postfix relay
+        ## GitLab→Postfix: no auth (internal network)
+        ## Postfix→Gmail: SASL auth via App Password
+        ## smtp_authentication = false karena Postfix internal tidak butuh auth
+        ## smtp_enable_starttls_auto = false karena internal plaintext OK
+        ## ============================================================
+        gitlab_rails['smtp_enable'] = true
+        gitlab_rails['smtp_address'] = 'postfix'
+        gitlab_rails['smtp_port'] = 587
+        gitlab_rails['smtp_domain'] = '${BASE_DOMAIN}'
+        gitlab_rails['smtp_authentication'] = false
+        gitlab_rails['smtp_enable_starttls_auto'] = false
+        gitlab_rails['smtp_tls'] = false
+        gitlab_rails['gitlab_email_from'] = 'resolute-gitlab@${BASE_DOMAIN}'
+        gitlab_rails['gitlab_email_reply_to'] = 'noreply@${BASE_DOMAIN}'
+
+        ## ============================================================
+        ## Object Storage — SeaweedFS S3-compatible (Consolidated)
+        ## ============================================================
+        gitlab_rails['object_store']['enabled'] = true
+        gitlab_rails['object_store']['proxy_download'] = true
+        gitlab_rails['object_store']['connection'] = {
+          'provider' => 'AWS',
+          'region' => 'us-east-1',
+          'aws_access_key_id' => '${SEAWEEDFS_S3_ACCESS_KEY}',
+          'aws_secret_access_key' => '${SEAWEEDFS_S3_SECRET_KEY}',
+          'endpoint' => 'http://seaweedfs:8333',
+          'path_style' => true,
+          'aws_signature_version' => 4
+        }
+        gitlab_rails['object_store']['objects']['artifacts']['bucket'] = 'gitlab-artifacts'
+        gitlab_rails['object_store']['objects']['external_diffs']['bucket'] = 'gitlab-artifacts'
+        gitlab_rails['object_store']['objects']['lfs']['bucket'] = 'gitlab-lfs'
+        gitlab_rails['object_store']['objects']['uploads']['bucket'] = 'gitlab-uploads'
+        gitlab_rails['object_store']['objects']['packages']['bucket'] = 'gitlab-packages'
+        gitlab_rails['object_store']['objects']['dependency_proxy']['bucket'] = 'gitlab-packages'
+        gitlab_rails['object_store']['objects']['terraform_state']['bucket'] = 'gitlab-packages'
+        gitlab_rails['object_store']['objects']['pages']['bucket'] = 'gitlab-uploads'
+
+        ## ============================================================
+        ## Container Registry — TLS terminated by Traefik
+        ## ============================================================
+        registry_external_url 'https://resolute-registry.${BASE_DOMAIN}'
+
+        registry['enable'] = true
+        registry['registry_http_addr'] = '0.0.0.0:5050'
+
+        gitlab_rails['registry_enabled'] = true
+        gitlab_rails['registry_host'] = 'resolute-registry.${BASE_DOMAIN}'
+        gitlab_rails['registry_port'] = '443'
+
+        registry_nginx['enable'] = false
+
+        registry['storage'] = {
+          's3' => {
+            'accesskey' => '${SEAWEEDFS_S3_ACCESS_KEY}',
+            'secretkey' => '${SEAWEEDFS_S3_SECRET_KEY}',
+            'bucket' => 'gitlab-registry',
+            'region' => 'us-east-1',
+            'regionendpoint' => 'http://seaweedfs:8333',
+            'pathstyle' => true,
+            'secure' => false
+          }
+        }
+
+        ## ============================================================
+        ## Backup ke SeaweedFS
+        ## ============================================================
+        gitlab_rails['backup_upload_connection'] = {
+          'provider' => 'AWS',
+          'region' => 'us-east-1',
+          'aws_access_key_id' => '${SEAWEEDFS_S3_ACCESS_KEY}',
+          'aws_secret_access_key' => '${SEAWEEDFS_S3_SECRET_KEY}',
+          'endpoint' => 'http://seaweedfs:8333',
+          'path_style' => true
+        }
+        gitlab_rails['backup_upload_remote_directory'] = 'gitlab-backups'
+        gitlab_rails['backup_keep_time'] = 604800
+
+    ports:
+      - "${GITLAB_SSH_PORT}:22"
+    shm_size: '256m'
+    volumes:
+      - ./config:/etc/gitlab
+      - ./data:/var/opt/gitlab
+      - ./logs:/var/log/gitlab
+    mem_limit: ${GITLAB_MEM_LIMIT}
+    cpus: ${GITLAB_CPUS}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost/-/health | grep -q 'GitLab OK'"]
+      interval: 60s
+      timeout: 30s
+      retries: 10
+      start_period: 300s
+    labels:
+      - "traefik.enable=true"
+      # GitLab Web UI
+      - "traefik.http.routers.gitlab.rule=Host(`resolute-gitlab.${BASE_DOMAIN}`)"
+      - "traefik.http.routers.gitlab.entrypoints=websecure"
+      - "traefik.http.routers.gitlab.tls.certresolver=step-ca"
+      - "traefik.http.services.gitlab.loadbalancer.server.port=80"
+      # B07 FIX: Explicit service association — tanpa ini Traefik bisa route ke port salah
+      - "traefik.http.routers.gitlab.service=gitlab"
+      # Container Registry — port 5050 (Omnibus internal default)
+      - "traefik.http.routers.gitlab-registry.rule=Host(`resolute-registry.${BASE_DOMAIN}`)"
+      - "traefik.http.routers.gitlab-registry.entrypoints=websecure"
+      - "traefik.http.routers.gitlab-registry.tls.certresolver=step-ca"
+      - "traefik.http.services.gitlab-registry.loadbalancer.server.port=5050"
+      # B07 FIX: Explicit service association untuk registry router
+      - "traefik.http.routers.gitlab-registry.service=gitlab-registry"
+      # ---- Observability ----
+      # - "logging=promtail"
+      # - "logging_jobname=gitlab"
+
+networks:
+  infra-proxy-net:
+    external: true
+  infra-backend-net:
+    external: true
+  infra-devops-net:
+    external: true

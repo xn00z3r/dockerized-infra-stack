@@ -1,0 +1,69 @@
+# =============================================================================
+# vault — Secret Management
+# Image: hashicorp/vault:2.0
+# Domain: resolute-vault.${BASE_DOMAIN}
+# Network: infra-proxy-net + infra-backend-net
+# Storage: Raft Integrated Storage (keputusan final)
+# =============================================================================
+
+x-service-defaults: &service-defaults
+  restart: unless-stopped
+  env_file:
+    - ../_shared/.env
+
+x-dual-network-dns-defaults: &dual-network-dns-defaults
+  networks:
+    - infra-proxy-net
+    - infra-backend-net
+  dns:
+    - ${INFRA_DNS_SERVER}
+
+services:
+  vault:
+    <<: [*service-defaults, *dual-network-dns-defaults]
+    image: hashicorp/vault:2.0
+    container_name: vault
+    command: ["vault", "server", "-config=/vault/config/vault.hcl"]
+    environment:
+      # N03 FIX: VAULT_ADDR harus client address (127.0.0.1), BUKAN server bind address (0.0.0.0)
+      # 0.0.0.0 adalah bind address untuk server listener (di vault.hcl)
+      # 127.0.0.1 adalah address yang digunakan vault CLI untuk connect ke server di dalam container
+      VAULT_ADDR: "http://127.0.0.1:8200"
+      # VAULT_API_ADDR dan VAULT_CLUSTER_ADDR untuk raft cluster — bisa menggunakan container name
+      VAULT_API_ADDR: "http://vault:8200"
+      VAULT_CLUSTER_ADDR: "http://vault:8201"
+      # VAULT_LOCAL_CONFIG: TIDAK di-set — menggunakan vault.hcl mount (avoid conflict)
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - ./config/vault.hcl:/vault/config/vault.hcl:ro
+      - ./data:/vault/data
+    mem_limit: ${VAULT_MEM_LIMIT}
+    cpus: ${VAULT_CPUS}
+    healthcheck:
+      # Liveness check: Vault API merespons dan return valid JSON
+      # vault status exit 0 (unsealed) atau exit 2 (sealed) — keduanya = API alive
+      # grep -q '"initialized"' = API merespons JSON (bukan error)
+      # Lulus saat sealed MAUPUN unsealed → make up tidak hang
+      test: ["CMD-SHELL", "vault status -format=json 2>&1 | grep -q '\"initialized\"' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.vault.rule=Host(`resolute-vault.${BASE_DOMAIN}`)"
+      - "traefik.http.routers.vault.entrypoints=websecure"
+      - "traefik.http.routers.vault.tls.certresolver=step-ca"
+      - "traefik.http.routers.vault.service=vault"
+      # Port 8200 = HTTP (tls_disable=1 di vault.hcl — TLS handled by Traefik)
+      - "traefik.http.services.vault.loadbalancer.server.port=8200"
+      # ---- Observability ----
+      # - "logging=promtail"
+      # - "logging_jobname=vault"
+
+networks:
+  infra-proxy-net:
+    external: true
+  infra-backend-net:
+    external: true

@@ -1,0 +1,30 @@
+# =============================================================================
+# INFRA-STACK .gitignore
+# NEVER commit any of these files
+# =============================================================================
+
+# Environment files — berisi credentials
+**/.env
+
+# Data directories — berisi state persisten
+**/data/
+**/logs/
+
+# Generated secrets & rendered config files (berisi credentials)
+traefik/config/auth/htpasswd
+traefik/config/traefik.yml
+traefik/config/certs/root_ca.crt
+traefik/data/acme.json
+traefik/data/access.log
+step-ca/config/root_ca.crt
+step-ca/data/
+vault/data/
+postgresql/initdb/01-gitlab.sql
+seaweedfs/config/s3.json
+gitlab/config/
+
+# Runner registration (berisi token sensitif)
+gitlab-runner/config/
+
+# Vault init output — simpan di luar git (/etc/vault-unseal/)
+vault-init.json

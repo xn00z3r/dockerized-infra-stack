@@ -1,0 +1,62 @@
+# =============================================================================
+# postfix — SMTP Relay via Gmail
+# Image: boky/postfix:v5.1.0
+# Network: infra-backend-net ONLY
+# Semua service dalam infra-backend-net bisa relay email ke postfix:587
+# =============================================================================
+
+x-service-defaults: &service-defaults
+  restart: unless-stopped
+  env_file:
+    - ../_shared/.env
+
+x-backend-network-dns-defaults: &backend-network-dns-defaults
+  networks:
+    - infra-backend-net
+  dns:
+    - ${INFRA_DNS_SERVER}
+
+services:
+  postfix:
+    <<: [*service-defaults, *backend-network-dns-defaults]
+
+    image: boky/postfix:v5.1.0
+    container_name: postfix
+
+    environment:
+      RELAYHOST: "[smtp.gmail.com]:587"
+      RELAYHOST_USERNAME: "${GMAIL_USER}"
+      RELAYHOST_PASSWORD: "${GMAIL_APP_PASSWORD}"
+      POSTFIX_myhostname: "mail.${BASE_DOMAIN}"
+      POSTFIX_mynetworks: "${POSTFIX_MYNETWORKS}"
+      POSTFIX_message_size_limit: "26214400"
+      POSTFIX_mydomain: "${BASE_DOMAIN}"
+      POSTFIX_myorigin: "${BASE_DOMAIN}"
+      ALLOWED_SENDER_DOMAINS: "${ALLOWED_SENDER_DOMAINS}"
+
+    volumes:
+      - ./data:/var/spool/postfix
+
+    mem_limit: ${POSTFIX_MEM_LIMIT}
+    cpus: ${POSTFIX_CPUS}
+
+    healthcheck:
+      # B09 FIX: bash /dev/tcp tidak butuh nc/netcat
+      # /dev/tcp/host/port adalah bash built-in TCP check
+      # Tersedia di semua bash-based images (termasuk Alpine dengan bash)
+      # Dua kondisi:
+      # 1. postfix status → master process berjalan
+      # 2. bash TCP check ke port 587 → port submission terbuka
+      test: ["CMD-SHELL", "postfix status > /dev/null 2>&1 && bash -c 'echo > /dev/tcp/localhost/587' 2>/dev/null"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    # ---- Observability ----
+    # labels:
+    #   - "logging=promtail"
+    #   - "logging_jobname=postfix"
+
+networks:
+  infra-backend-net:
+    external: true

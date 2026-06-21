@@ -1,0 +1,35 @@
+# =============================================================================
+# Traefik Dynamic Configuration — Middlewares & ServersTransports
+# File ini di-watch oleh Traefik (hot reload tanpa restart container)
+# Compatible: Traefik v3.7.5
+# =============================================================================
+
+http:
+  middlewares:
+    # Basic auth untuk Traefik dashboard
+    # htpasswd di-generate oleh make init via openssl passwd -apr1
+    basic-auth:
+      basicAuth:
+        usersFile: "/etc/traefik/auth/htpasswd"
+
+    # Security headers — B08 FIX: hapus browserXssFilter (deprecated di Traefik v3)
+    # Ganti dengan customResponseHeaders untuk X-XSS-Protection
+    secure-headers:
+      headers:
+        frameDeny: true
+        contentTypeNosniff: true
+        referrerPolicy: "strict-origin-when-cross-origin"
+        forceSTSHeader: true
+        stsSeconds: 31536000
+        stsIncludeSubdomains: true
+        # X-XSS-Protection via customResponseHeaders (Traefik v3 compatible)
+        customResponseHeaders:
+          X-XSS-Protection: "1; mode=block"
+
+  # ServersTransport khusus untuk proxy ke step-ca backend (HTTPS internal)
+  # Traefik harus trust root CA internal saat forward ke step-ca:9000
+  serversTransports:
+    step-ca-transport:
+      rootCAs:
+        - /etc/traefik/certs/root_ca.crt
+      insecureSkipVerify: false

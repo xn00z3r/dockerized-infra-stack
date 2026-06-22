@@ -1,0 +1,11 @@
+-- =============================================================================
+-- 01-init.sql.template — MySQL Initialization
+-- Template: di-render saat make init
+-- Mengikuti MYSQL_DATABASE dari _shared/.env
+-- =============================================================================
+
+CREATE DATABASE IF NOT EXISTS `${MYSQL_DATABASE}`
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
+
+SELECT 'MySQL initialized successfully' AS status;

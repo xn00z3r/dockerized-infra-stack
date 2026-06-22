@@ -63,14 +63,19 @@ up: _check_networks
 	docker compose -f step-ca/docker-compose.yml up -d
 	@bash _shared/scripts/wait-healthy.sh step-ca 120
 
-	@echo "==> [up] Checking root_ca.crt distribution..."
-	@if [ ! -f traefik/config/certs/root_ca.crt ]; then \
-		echo "    Copying root_ca.crt from step-ca container..."; \
-		docker cp step-ca:/home/step/certs/root_ca.crt traefik/config/certs/root_ca.crt; \
-		echo "    root_ca.crt copied."; \
-	else \
-		echo "    root_ca.crt already present."; \
-	fi
+	@echo "==> [up] Synchronizing root_ca.crt..."
+	@mkdir -p traefik/config/certs || { \
+		echo "ERROR: unable to create traefik/config/certs"; \
+		exit 1; }
+	@docker cp \
+		step-ca:/home/step/certs/root_ca.crt \
+		traefik/config/certs/root_ca.crt || { \					
+			echo "ERROR: failed to retrieve root_ca.crt from step-ca"; \
+			exit 1; }
+	@test -f traefik/config/certs/root_ca.crt || { \
+			echo "ERROR: root_ca.crt not found after synchronization"; \
+			exit 1; }
+	@echo "    root_ca.crt synchronized."
 
 	@$(MAKE) up-continue
 

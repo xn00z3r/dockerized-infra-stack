@@ -4,7 +4,8 @@
 # Network: infra-devops-net (komunikasi dengan GitLab)
 # Executor: Docker via Docker socket mount
 #
-# CATATAN KEAMANAN: Runner memiliki akses ke Docker daemon host.
+# CATATAN KEAMANAN:
+# Runner memiliki akses ke Docker daemon host.
 # Acceptable untuk private local infra. JANGAN di environment multi-tenant.
 #
 # CATATAN REGISTRASI:
@@ -39,24 +40,19 @@ services:
     mem_limit: ${RUNNER_MEM_LIMIT}
     cpus: ${RUNNER_CPUS}
     healthcheck:
-      # F04 FIX: gitlab-runner verify TANPA --delete
-      # Flag --delete menghapus stale runners dari server GitLab — BERBAHAYA sebagai health check
-      # verify tanpa --delete: cek runner terdaftar dan komunikasi dengan GitLab OK
-      # Exit 0: runner registered dan GitLab reachable
-      # Exit non-0: runner belum register ATAU GitLab tidak reachable
-      # Runner akan unhealthy sampai registrasi post-deploy selesai — ini expected behavior
-      test: 
+      # Health criteria:
+      # 1. PostgreSQL menerima koneksi
+      # 2. Database GitLab yang didefinisikan pada GITLAB_DB_NAME benar-benar ada
+      test:
         [
-          "CMD",
-          "gitlab-runner",
-          "--version"
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB} && psql -U ${POSTGRES_USER} -lqt | cut -d '|' -f1 | xargs -n1 | grep -Fxq '${GITLAB_DB_NAME}'"
         ]
-      interval: 60s
-      timeout: 30s
-      retries: 3
-      start_period: 30s
-    # Tidak ada labels Traefik — Runner tidak di-expose via HTTP/HTTPS
-    # Tidak ada ports mapping — internal only
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
     # ---- Observability (uncomment saat Loki/Prometheus stack deployed) ----
     # labels:
     #   - "logging=promtail"

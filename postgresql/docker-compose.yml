@@ -46,13 +46,12 @@ services:
       # 1. pg_isready: PostgreSQL menerima koneksi
       # 2. psql -lqt | grep gitlabdb: database gitlabdb benar-benar ada
       test:
-        [
-          "CMD-SHELL",
-          "pg_isready -U ${POSTGRES_USER} -d postgres &&
-           psql -U ${POSTGRES_USER} -lqt |
-           cut -d '|' -f1 |
-           grep -qw gitlabdb"
-        ]
+        - CMD-SHELL
+        - >
+          pg_isready -U ${POSTGRES_USER} -d postgres &&
+          psql -U ${POSTGRES_USER} -lqt |
+          cut -d '|' -f1 |
+          grep -qw "${GITLAB_DB_NAME}"
     # Tidak ada labels Traefik — PostgreSQL tidak di-expose via HTTP/HTTPS
     # Tidak ada ports mapping — internal only
     # ---- Observability (uncomment saat Loki/Prometheus stack deployed) ----

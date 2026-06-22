@@ -1,0 +1,19 @@
+-- =============================================================================
+-- 99-extensions.sql.template — PostgreSQL Extensions untuk GitLab
+-- Template: di-render ke 99-extensions.sql oleh make init via envsubst
+-- 99-extensions.sql (hasil render) tidak mengandung credential,
+-- namun tetap dihasilkan secara deterministik dari konfigurasi environment
+--
+-- Dieksekusi setelah 01-gitlab.sql (urutan alphanumerik)
+-- Dijalankan sebagai superuser (POSTGRES_USER)
+--
+-- PENTING:
+-- Database target mengikuti GITLAB_DB_NAME dari _shared/.env
+-- sehingga perubahan nama database GitLab tidak memerlukan edit manual.
+-- =============================================================================
+
+\c ${GITLAB_DB_NAME}
+
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE EXTENSION IF NOT EXISTS btree_gist;
+CREATE EXTENSION IF NOT EXISTS plpgsql;

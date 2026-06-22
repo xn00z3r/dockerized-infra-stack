@@ -35,7 +35,8 @@ services:
       - ./data:/var/lib/postgresql/data
       # Init scripts — dieksekusi SEKALI saat data dir kosong
       # 01-gitlab.sql di-render dari template (berisi password, gitignored)
-      # 99-extensions.sql static (tidak berisi credentials, committed)
+      # 99-extensions.sql di-render dari template saat make init
+      # Mengikuti GITLAB_DB_NAME agar tidak ada hardcoded database name
       - ./initdb:/docker-entrypoint-initdb.d:ro
     mem_limit: ${POSTGRESQL_MEM_LIMIT}
     cpus: ${POSTGRESQL_CPUS}

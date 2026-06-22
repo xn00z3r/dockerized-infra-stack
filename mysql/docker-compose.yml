@@ -34,11 +34,19 @@ services:
       # 1. mysqladmin ping: MySQL menerima koneksi
       # 2. SHOW DATABASES: dapat eksekusi query aktual (eliminasi false positive)
       # Double $$ mencegah Docker Compose interpolasi prematur variabel $$
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD && mysql -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD -e 'SHOW DATABASES;' > /dev/null 2>&1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 60s
+      test:
+        - CMD-SHELL
+        - >
+          mysqladmin ping
+          -h 127.0.0.1
+          -u root
+          -p$$MYSQL_ROOT_PASSWORD &&
+          mysql
+          -h 127.0.0.1
+          -u root
+          -p$$MYSQL_ROOT_PASSWORD
+          -Nse "SHOW DATABASES"
+          | grep -qw "$$MYSQL_DATABASE"
     # Tidak ada labels Traefik — MySQL tidak di-expose via HTTP/HTTPS
     # Tidak ada ports mapping — internal only
     # ---- Observability (uncomment saat Loki/Prometheus stack deployed) ----

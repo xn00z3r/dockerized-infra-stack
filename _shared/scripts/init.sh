@@ -222,5 +222,3 @@ else
 fi
 
 echo
-log "Initialization complete!"
-echo "Setting up git repository Done"

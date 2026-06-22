@@ -55,7 +55,7 @@ init:
 	@bash _shared/scripts/create-networks.sh
 	@echo ""
 	@echo "==> [init] Initialization complete!"
-	@echo "Next: make up 'make up'"
+	@echo "Next: make up"
 
 up: _check_networks
 	@echo "==> [up] Starting step-ca..."

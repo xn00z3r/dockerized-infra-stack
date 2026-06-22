@@ -29,7 +29,9 @@ services:
       # WAJIB: memberitahu library LEGO (ACME client) untuk trust internal CA
       # Tanpa ini, Traefik gagal verifikasi TLS ke step-ca ACME server
       LEGO_CA_CERTIFICATES: /etc/traefik/certs/root_ca.crt
-      LEGO_CA_SERVERNAME: "resolute-ca.${BASE_DOMAIN}"
+      # Trust internal Step-CA certificate menggunakan
+      # canonical FQDN yang berasal dari .env
+      LEGO_CA_SERVERNAME: "${STEPCA_FQDN}"
     ports:
       - "80:80"    # HTTP — redirect ke HTTPS
       - "443:443"  # HTTPS — TLS termination
@@ -66,7 +68,7 @@ services:
     labels:
       - "traefik.enable=true"
       # Dashboard routing
-      - "traefik.http.routers.traefik.rule=Host(`resolute-traefik.${BASE_DOMAIN}`)"
+      - "traefik.http.routers.traefik.rule=Host(`${TRAEFIK_FQDN}`)"
       - "traefik.http.routers.traefik.entrypoints=websecure"
       - "traefik.http.routers.traefik.tls.certresolver=step-ca"
       - "traefik.http.routers.traefik.service=api@internal"

@@ -25,7 +25,7 @@ services:
       # F06 FIX: POSTGRES_USER (bukan POSTGRES_ROOT_USER) — nama var yang dikenali image
       POSTGRES_USER: "${POSTGRES_USER}"
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
-      POSTGRES_DB: "postgres"
+      POSTGRES_DB: "${POSTGRES_DB}"
       # F20 FIX: PGDATA di subdirectory untuk menghindari 'lost+found' permission error
       # Volume mount: ./data → /var/lib/postgresql/data
       # Data aktual: ./data/pgdata/

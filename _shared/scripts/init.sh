@@ -231,7 +231,7 @@ if [ ! -d ".git" ]; then
     traefik/config/traefik.yml.template traefik/config/dynamic/ \
     vault/docker-compose.yml vault/.env.template vault/config/ vault/README.md \
     postgresql/docker-compose.yml postgresql/.env.template postgresql/README.md \
-    postgresql/initdb/01-gitlab.sql.template postgresql/initdb/99-extensions.sql \
+    postgresql/initdb/01-gitlab.sql.template postgresql/initdb/99-extensions.sql.template \
     mysql/docker-compose.yml mysql/.env.template mysql/config/ mysql/README.md \
     mysql/initdb/ \
     seaweedfs/docker-compose.yml seaweedfs/.env.template \

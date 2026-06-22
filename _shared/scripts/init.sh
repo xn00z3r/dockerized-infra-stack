@@ -161,6 +161,11 @@ if [ -f "postgresql/initdb/01-gitlab.sql.template" ]; then
   info "postgresql/initdb/01-gitlab.sql rendered OK"
 fi
 
+if [ -f "postgresql/initdb/99-extensions.sql.template" ]; then
+  envsubst < postgresql/initdb/99-extensions.sql.template > postgresql/initdb/99-extensions.sql
+  info "postgresql/initdb/99-extensions.sql rendered OK"
+fi
+
 # -----------------------------------------------------------------------------
 # STEP 3: Generate Traefik htpasswd
 # -----------------------------------------------------------------------------

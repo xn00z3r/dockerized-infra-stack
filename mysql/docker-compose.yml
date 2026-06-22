@@ -25,7 +25,7 @@ services:
       MYSQL_DATABASE: "${MYSQL_DATABASE}"
     volumes:
       - ./data:/var/lib/mysql
-      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - ./rendered/initdb:/docker-entrypoint-initdb.d:ro
       - ./config/my.cnf:/etc/mysql/conf.d/custom.cnf:ro
     mem_limit: ${MYSQL_MEM_LIMIT}
     cpus: ${MYSQL_CPUS}

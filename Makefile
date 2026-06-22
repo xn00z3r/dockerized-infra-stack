@@ -15,16 +15,17 @@ INFRA_STACK_ROOT := $(shell pwd)
 export INFRA_STACK_ROOT
 
 COMPOSE := docker compose
+COMPOSE_ENV := --env-file _shared/.env
 
-MYSQL_COMPOSE      := $(COMPOSE) -f mysql/docker-compose.yml
-POSTGRES_COMPOSE   := $(COMPOSE) -f postgresql/docker-compose.yml
-TRAEFIK_COMPOSE    := $(COMPOSE) -f traefik/docker-compose.yml
-VAULT_COMPOSE      := $(COMPOSE) -f vault/docker-compose.yml
-STEPCA_COMPOSE     := $(COMPOSE) -f step-ca/docker-compose.yml
-SEAWEED_COMPOSE    := $(COMPOSE) -f seaweedfs/docker-compose.yml
-POSTFIX_COMPOSE    := $(COMPOSE) -f postfix/docker-compose.yml
-GITLAB_COMPOSE     := $(COMPOSE) -f gitlab/docker-compose.yml
-RUNNER_COMPOSE     := $(COMPOSE) -f gitlab-runner/docker-compose.yml
+MYSQL_COMPOSE      := $(COMPOSE) $(COMPOSE_ENV) -f mysql/docker-compose.yml
+POSTGRES_COMPOSE   := $(COMPOSE) $(COMPOSE_ENV) -f postgresql/docker-compose.yml
+TRAEFIK_COMPOSE    := $(COMPOSE) $(COMPOSE_ENV) -f traefik/docker-compose.yml
+VAULT_COMPOSE      := $(COMPOSE) $(COMPOSE_ENV) -f vault/docker-compose.yml
+STEPCA_COMPOSE     := $(COMPOSE) $(COMPOSE_ENV) -f step-ca/docker-compose.yml
+SEAWEED_COMPOSE    := $(COMPOSE) $(COMPOSE_ENV) -f seaweedfs/docker-compose.yml
+POSTFIX_COMPOSE    := $(COMPOSE) $(COMPOSE_ENV) -f postfix/docker-compose.yml
+GITLAB_COMPOSE     := $(COMPOSE) $(COMPOSE_ENV) -f gitlab/docker-compose.yml
+RUNNER_COMPOSE     := $(COMPOSE) $(COMPOSE_ENV) -f gitlab-runner/docker-compose.yml
 
 # =============================================================================
 # HELP

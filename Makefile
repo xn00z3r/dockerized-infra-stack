@@ -3,6 +3,7 @@
 # =============================================================================
 
 .PHONY: init up up-continue down restart status backup backup-remote \
+        purge-mysql verify-mysql \
         new-service git-remote-setup logs shell help _check_networks
 
 -include _shared/.env
@@ -12,6 +13,18 @@ export
 # Digunakan oleh backup scripts — tidak hardcode path
 INFRA_STACK_ROOT := $(shell pwd)
 export INFRA_STACK_ROOT
+
+COMPOSE := docker compose
+
+MYSQL_COMPOSE      := $(COMPOSE) -f mysql/docker-compose.yml
+POSTGRES_COMPOSE   := $(COMPOSE) -f postgresql/docker-compose.yml
+TRAEFIK_COMPOSE    := $(COMPOSE) -f traefik/docker-compose.yml
+VAULT_COMPOSE      := $(COMPOSE) -f vault/docker-compose.yml
+STEPCA_COMPOSE     := $(COMPOSE) -f step-ca/docker-compose.yml
+SEAWEED_COMPOSE    := $(COMPOSE) -f seaweedfs/docker-compose.yml
+POSTFIX_COMPOSE    := $(COMPOSE) -f postfix/docker-compose.yml
+GITLAB_COMPOSE     := $(COMPOSE) -f gitlab/docker-compose.yml
+RUNNER_COMPOSE     := $(COMPOSE) -f gitlab-runner/docker-compose.yml
 
 # =============================================================================
 # HELP
@@ -31,6 +44,8 @@ help:
 	@echo "    make restart              Stop then start semua service"
 	@echo ""
 	@echo "  MAINTENANCE:"
+	@echo "    make purge-mysql         Remove MySQL data and volumes"
+	@echo "    make verify-mysql        Validate MySQL bootstrap"
 	@echo "    make status               Tampilkan health status semua container"
 	@echo "    make backup               Jalankan backup semua service"
 	@echo "    make backup-remote        Push backup lokal ke remote storage"
@@ -59,7 +74,7 @@ init:
 
 up: _check_networks
 	@echo "==> [up] Starting step-ca..."
-	docker compose -f step-ca/docker-compose.yml up -d
+	$(STEPCA_COMPOSE) up -d
 	@bash _shared/scripts/wait-healthy.sh step-ca 120
 
 	@echo "==> [up] Synchronizing root_ca.crt..."
@@ -80,34 +95,34 @@ up: _check_networks
 
 up-continue: _check_networks
 	@echo "==> [up] Starting Traefik..."
-	docker compose -f traefik/docker-compose.yml up -d
+	$(TRAEFIK_COMPOSE) up -d
 	@bash _shared/scripts/wait-healthy.sh traefik 60
 
 	@echo "==> [up] Starting Vault..."
-	docker compose -f vault/docker-compose.yml up -d
+	$(VAULT_COMPOSE) up -d
 	@bash _shared/scripts/wait-healthy.sh vault 60
 	@echo "    NOTE: Jika Vault sealed, jalankan: bash _shared/scripts/vault-unseal.sh"
 
 	@echo "==> [up] Starting PostgreSQL dan MySQL..."
-	docker compose -f postgresql/docker-compose.yml up -d
-	docker compose -f mysql/docker-compose.yml up -d
+	$(POSTGRES_COMPOSE) up -d
+	$(MYSQL_COMPOSE) up -d
 	@bash _shared/scripts/wait-healthy.sh postgresql 120
 	@bash _shared/scripts/wait-healthy.sh mysql 120
 
 	@echo "==> [up] Starting SeaweedFS..."
-	docker compose -f seaweedfs/docker-compose.yml up -d
+	$(SEAWEED_COMPOSE) up -d
 	@bash _shared/scripts/wait-healthy.sh seaweedfs 90
 
 	@echo "==> [up] Starting Postfix..."
-	docker compose -f postfix/docker-compose.yml up -d
+	$(POSTFIX_COMPOSE) up -d
 	@bash _shared/scripts/wait-healthy.sh postfix 60
 
 	@echo "==> [up] Starting GitLab CE..."
-	docker compose -f gitlab/docker-compose.yml up -d
+	$(GITLAB_COMPOSE) up -d
 	@bash _shared/scripts/wait-healthy.sh gitlab 600
 
 	@echo "==> [up] Starting GitLab Runner..."
-	docker compose -f gitlab-runner/docker-compose.yml up -d
+	$(RUNNER_COMPOSE) up -d
 	@echo "    NOTE: Runner healthy setelah registrasi selesai."
 
 	@echo ""
@@ -118,8 +133,10 @@ up-continue: _check_networks
 down:
 	@echo "==> [down] Stopping services in reverse order..."
 	@for service in gitlab-runner gitlab postfix seaweedfs mysql postgresql vault traefik step-ca; do \
-		echo "    Stopping $$service..."; \
-		docker compose -f $$service/docker-compose.yml down 2>/dev/null || true; \
+		if [ -f "$$service/docker-compose.yml" ]; then \
+			echo "    Stopping $$service..."; \
+			docker compose -f $$service/docker-compose.yml down --remove-orphans || true; \
+		fi; \
 	done
 	@echo "==> [down] All services stopped. Networks preserved."
 	@echo "    To remove networks: docker network rm infra-proxy-net infra-backend-net infra-devops-net"
@@ -132,6 +149,28 @@ restart:
 # =============================================================================
 # MAINTENANCE
 # =============================================================================
+
+purge-mysql:
+	@echo "==> [purge-mysql] Stopping MySQL..."
+	@$(MYSQL_COMPOSE) down -v --remove-orphans || true
+	@echo "==> [purge-mysql] Removing mysql/data contents..."
+	@sudo rm -rf mysql/data/*
+	@echo "==> [purge-mysql] Recreating mysql/data..."
+	@mkdir -p mysql/data
+	@echo "==> [purge-mysql] Done."
+
+verify-mysql:
+	@echo "==> [verify-mysql] Verifying MySQL health..."
+	@docker inspect mysql \
+		--format='{{.State.Health.Status}}' \
+		| grep -q '^healthy$$'
+	@echo "    Healthcheck: PASS"
+	@docker exec mysql \
+		mysql \
+		-uroot \
+		-p"$$MYSQL_ROOT_PASSWORD" \
+		-Nse "SELECT VERSION();" >/dev/null
+	@echo "    MySQL connection: PASS"
 
 status:
 	@echo ""

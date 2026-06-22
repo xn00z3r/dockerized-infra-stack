@@ -19,7 +19,8 @@ traefik/data/access.log
 step-ca/config/root_ca.crt
 step-ca/data/
 vault/data/
-postgresql/initdb/01-gitlab.sql
+postgresql/initdb/
+mysql/rendered/
 seaweedfs/config/s3.json
 gitlab/config/
 

@@ -166,9 +166,14 @@ if [ -f "postgresql/initdb/99-extensions.sql.template" ]; then
   info "postgresql/initdb/99-extensions.sql rendered OK"
 fi
 
-if [ -f "mysql/initdb/01-init.sql.template" ]; then
-  envsubst < mysql/initdb/01-init.sql.template > mysql/initdb/01-init.sql
-  info "mysql/initdb/01-init.sql rendered OK"
+mkdir -p mysql/rendered/initdb
+rm -f mysql/rendered/initdb/*.sql
+if [ -f "mysql/templates/initdb/01-init.sql.template" ]; then
+  envsubst \
+    < mysql/templates/initdb/01-init.sql.template \
+    > mysql/rendered/initdb/01-init.sql
+
+  info "mysql/rendered/initdb/01-init.sql rendered OK"
 fi
 
 # -----------------------------------------------------------------------------

@@ -17,6 +17,8 @@ export INFRA_STACK_ROOT
 COMPOSE := docker compose
 COMPOSE_ENV := --env-file _shared/.env
 
+COMPOSE_DOWN = docker compose --env-file _shared/.env
+
 MYSQL_COMPOSE      := $(COMPOSE) $(COMPOSE_ENV) -f mysql/docker-compose.yml
 POSTGRES_COMPOSE   := $(COMPOSE) $(COMPOSE_ENV) -f postgresql/docker-compose.yml
 TRAEFIK_COMPOSE    := $(COMPOSE) $(COMPOSE_ENV) -f traefik/docker-compose.yml
@@ -136,7 +138,7 @@ down:
 	@for service in gitlab-runner gitlab postfix seaweedfs mysql postgresql vault traefik step-ca; do \
 		if [ -f "$$service/docker-compose.yml" ]; then \
 			echo "    Stopping $$service..."; \
-			docker compose -f $$service/docker-compose.yml down --remove-orphans || true; \
+			$(COMPOSE_DOWN) -f $$service/docker-compose.yml down --remove-orphans || true; \
 		fi; \
 	done
 	@echo "==> [down] All services stopped. Networks preserved."
@@ -161,7 +163,12 @@ purge-mysql:
 	@echo "==> [purge-mysql] Done."
 
 verify-mysql:
-	@echo "==> [verify-mysql] Verifying MySQL health..."
+	@echo "==> [verify-mysql] Verifying compose rendering..."
+	@docker compose \
+		--env-file _shared/.env \
+		-f mysql/docker-compose.yml \
+		config | grep -q "MYSQL_DATABASE: default_db"
+	@echo "    Compose env rendering: PASS"
 	@docker inspect mysql \
 		--format='{{.State.Health.Status}}' \
 		| grep -q '^healthy$$'
@@ -170,8 +177,10 @@ verify-mysql:
 		mysql \
 		-uroot \
 		-p"$$MYSQL_ROOT_PASSWORD" \
-		-Nse "SELECT VERSION();" >/dev/null
-	@echo "    MySQL connection: PASS"
+		-Nse "SHOW DATABASES" \
+		| grep -q "^default_db$$"
+	@echo "    Database bootstrap: PASS"
+	@echo "==> [verify-mysql] SUCCESS"
 
 status:
 	@echo ""
@@ -213,7 +222,10 @@ logs:
 		echo "Options: step-ca traefik vault postgresql mysql seaweedfs postfix gitlab gitlab-runner"; \
 		exit 1; \
 	fi
-	docker compose -f $(SERVICE)/docker-compose.yml logs -f --tail=100
+	docker compose \
+    --env-file _shared/.env \
+    -f $(SERVICE)/docker-compose.yml \
+    logs -f --tail=100
 
 shell:
 	@if [ -z "$(SERVICE)" ]; then \

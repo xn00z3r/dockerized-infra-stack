@@ -81,7 +81,8 @@ render_env_template() {
 
     # shellcheck disable=SC1090
     source "$ENV_TEMPLATE"
-
+    STEPCA_DNS="${STEPCA_FQDN},step-ca,localhost"
+    export STEPCA_DNS
     set +a
 
     envsubst < "$ENV_TEMPLATE"

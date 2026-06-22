@@ -166,6 +166,11 @@ if [ -f "postgresql/initdb/99-extensions.sql.template" ]; then
   info "postgresql/initdb/99-extensions.sql rendered OK"
 fi
 
+if [ -f "mysql/initdb/01-init.sql.template" ]; then
+  envsubst < mysql/initdb/01-init.sql.template > mysql/initdb/01-init.sql
+  info "mysql/initdb/01-init.sql rendered OK"
+fi
+
 # -----------------------------------------------------------------------------
 # STEP 3: Generate Traefik htpasswd
 # -----------------------------------------------------------------------------

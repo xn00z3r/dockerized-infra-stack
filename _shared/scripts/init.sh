@@ -223,4 +223,4 @@ fi
 
 echo
 log "Initialization complete!"
-echo "    Next: make up"
+echo "Setting up git repository Done"

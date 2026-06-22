@@ -61,9 +61,32 @@ validate_template_file() {
 }
 
 render_env_template() {
-  # Render hanya template config non-secret.
-  # Secrets akan di-append apa adanya dari .secrets.template.
-  envsubst < "$ENV_TEMPLATE" > "$ENV_TMP"
+
+  # Render _shared/.env dari _shared/.env.template.
+  #
+  # Template dapat mengandung referensi antar variable, misalnya:
+  #
+  #   BASE_DOMAIN=dts.system
+  #   STEPCA_DNS=resolute-ca.${BASE_DOMAIN},step-ca,localhost
+  #
+  # Oleh karena itu template terlebih dahulu di-load ke environment
+  # shell menggunakan source + export (-a), lalu dilakukan rendering
+  # final menggunakan envsubst.
+  #
+  # Hal ini memastikan nested variable expansion menghasilkan nilai
+  # deterministik dan tidak meninggalkan placeholder kosong.
+
+  (
+    set -a
+
+    # shellcheck disable=SC1090
+    source "$ENV_TEMPLATE"
+
+    set +a
+
+    envsubst < "$ENV_TEMPLATE"
+  ) > "$ENV_TMP"
+
 }
 
 append_secrets_template() {

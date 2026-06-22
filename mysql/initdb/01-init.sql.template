@@ -1,11 +1,9 @@
 -- =============================================================================
 -- 01-init.sql.template — MySQL Initialization
--- Template: di-render saat make init
--- Mengikuti MYSQL_DATABASE dari _shared/.env
+-- Database dibuat oleh official MySQL entrypoint melalui MYSQL_DATABASE
+-- Script ini hanya menjalankan bootstrap object di dalam database tersebut
 -- =============================================================================
 
-CREATE DATABASE IF NOT EXISTS `${MYSQL_DATABASE}`
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_unicode_ci;
+USE `${MYSQL_DATABASE}`;
 
 SELECT 'MySQL initialized successfully' AS status;

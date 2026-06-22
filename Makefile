@@ -55,7 +55,7 @@ init:
 	@bash _shared/scripts/create-networks.sh
 	@echo ""
 	@echo "==> [init] SELESAI."
-	@echo "    First-time: ikuti Bootstrap Sequence Section 8"
+	@echo "    First-time: jalankan 'make up'"
 	@echo "    Normal ops: make up"
 
 up: _check_networks

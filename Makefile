@@ -54,9 +54,8 @@ init:
 	@echo "==> [init] Creating Docker networks..."
 	@bash _shared/scripts/create-networks.sh
 	@echo ""
-	@echo "==> [init] SELESAI."
-	@echo "    First-time: jalankan 'make up'"
-	@echo "    Normal ops: make up"
+	@echo "==> [init] Initialization complete!"
+	@echo "Next: make up 'make up'"
 
 up: _check_networks
 	@echo "==> [up] Starting step-ca..."

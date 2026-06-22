@@ -21,7 +21,7 @@ x-dual-network-dns-defaults: &dual-network-dns-defaults
 services:
   vault:
     <<: [*service-defaults, *dual-network-dns-defaults]
-    image: hashicorp/vault:2.0
+    image: hashicorp/vault:2.0.3
     container_name: vault
     command: ["vault", "server", "-config=/vault/config/vault.hcl"]
     environment:

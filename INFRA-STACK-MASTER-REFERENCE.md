@@ -36,7 +36,7 @@
 | F19 | MEDIUM | `container_name` tidak disebutkan eksplisit di seluruh service — diperlukan `wait-healthy.sh` | Container name ditambahkan ke setiap service section |
 | F20 | MEDIUM | PostgreSQL `PGDATA` subdirectory behavior tidak dijelaskan — rawan confusion volume mount | Ditambahkan penjelasan eksplisit |
 | F21 | MEDIUM | `.gitignore` tidak mencakup rendered config files yang berisi credentials | Gitignore diperlengkap |
-| F22 | MEDIUM | `step-ca` container tidak join `infra-backend-net`, tapi Traefik perlu resolve `ca.${BASE_DOMAIN}` dari ACME | step-ca tetap di proxy-net, Traefik resolve via DNS (container name) — didokumentasikan |
+| F22 | MEDIUM | `step-ca` container tidak join `infra-backend-net`, tapi Traefik perlu resolve `resolute-ca.${BASE_DOMAIN}` dari ACME | step-ca tetap di proxy-net, Traefik resolve via DNS (container name) — didokumentasikan |
 | F23 | MEDIUM | `Vault port 8200/8201` di service table label sebagai HTTPS tapi vault.hcl `tls_disable=1` | Dikoreksi label port ke HTTP |
 | F24 | MEDIUM | SeaweedFS health check: `curl -sf http://localhost:9333/cluster/status | grep -q 'IsLeader'` — field JSON case-sensitive | Diverifikasi field name adalah `IsLeader` (kapital) |
 | F25 | MEDIUM | Postfix health check `postfix status` output string hardcoded — bisa berbeda per versi Alpine/Debian | Diubah ke approach yang lebih robust |

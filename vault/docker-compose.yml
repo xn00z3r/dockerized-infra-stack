@@ -52,7 +52,7 @@ services:
       start_period: 60s
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.vault.rule=Host(`resolute-vault.${BASE_DOMAIN}`)"
+      - "traefik.http.routers.vault.rule=Host(`${VAULT_FQDN}`)"
       - "traefik.http.routers.vault.entrypoints=websecure"
       - "traefik.http.routers.vault.tls.certresolver=step-ca"
       - "traefik.http.routers.vault.service=vault"

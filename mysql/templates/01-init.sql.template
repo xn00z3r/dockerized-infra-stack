@@ -1,9 +1,0 @@
--- =============================================================================
--- 01-init.sql.template — MySQL Initialization
--- Database dibuat oleh official MySQL entrypoint melalui MYSQL_DATABASE
--- Script ini hanya menjalankan bootstrap object di dalam database tersebut
--- =============================================================================
-
-USE `${MYSQL_DATABASE}`;
-
-SELECT 'MySQL initialized successfully' AS status;

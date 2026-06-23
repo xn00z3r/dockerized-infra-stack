@@ -211,6 +211,13 @@ backup:
 	@find /data/backups -maxdepth 2 -type d -mtime +7 -exec rm -rf {} + 2>/dev/null || true
 	@echo "==> [backup] Done. Location: /data/backups/"
 
+restore-mysql:
+	@if [ -z "$(BACKUP)" ]; then \
+		echo "Usage: make restore-mysql BACKUP=<timestamp>"; \
+		exit 1; \
+	fi
+	@bash _shared/scripts/backup/restore-mysql.sh "$(BACKUP)"
+
 backup-remote:
 	@echo "==> [backup-remote] Not yet implemented."
 	@echo "    Manual: rclone sync /data/backups remote:infra-backups"

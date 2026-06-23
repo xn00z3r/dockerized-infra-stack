@@ -21,8 +21,12 @@ docker exec mysql mysqldump \
     --all-databases \
     --single-transaction \
     --quick \
-    --lock-tables=false | \
-    gzip > "${BACKUP_DIR}/all-databases.sql.gz"
+    --lock-tables=false \
+    --routines \
+    --triggers \
+    --events \
+    --set-gtid-purged=OFF \
+| gzip > "${BACKUP_DIR}/all-databases.sql.gz"
 
 echo "  [mysql] Backup complete: ${BACKUP_DIR}/all-databases.sql.gz"
 echo "  [mysql] Size: $(du -sh "${BACKUP_DIR}/all-databases.sql.gz" | cut -f1)"

@@ -1,0 +1,62 @@
+contract:
+  name: governance-metadata-contract
+  version: v1
+
+rules:
+
+  resource_id:
+    required: true
+    unique: true
+    immutable: true
+
+  resource_type:
+    required: true
+
+  owner:
+    required: true
+
+  lifecycle:
+    required: true
+
+  criticality:
+    required: true
+
+  created_at:
+    required: true
+
+  updated_at:
+    required: true
+
+allowed_resource_types:
+
+  - service
+  - database
+  - bucket
+  - secret
+  - network
+  - volume
+  - capability
+
+allowed_lifecycle_states:
+
+  - proposed
+  - active
+  - deprecated
+  - retired
+  - archived
+  - purged
+
+allowed_criticality_levels:
+
+  - tier-0
+  - tier-1
+  - tier-2
+  - tier-3
+
+governance:
+
+  authoritative_source: git
+
+  runtime_is_observed_state: true
+
+  reconciliation_required: true

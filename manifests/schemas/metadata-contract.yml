@@ -1,6 +1,6 @@
 contract:
   name: governance-metadata-contract
-  version: v1
+  version: v1.1
 
 rules:
 
@@ -23,6 +23,7 @@ rules:
 
   created_at:
     required: true
+    immutable: true
 
   updated_at:
     required: true
@@ -37,21 +38,19 @@ allowed_resource_types:
   - volume
   - capability
 
-allowed_lifecycle_states:
+taxonomy:
 
-  - proposed
-  - active
-  - deprecated
-  - retired
-  - archived
-  - purged
+  owner:
+    source: owner-taxonomy.yml
 
-allowed_criticality_levels:
+  lifecycle:
+    source: lifecycle-taxonomy.yml
 
-  - tier-0
-  - tier-1
-  - tier-2
-  - tier-3
+  criticality:
+    source: criticality-taxonomy.yml
+
+  retention:
+    source: retention-taxonomy.yml
 
 governance:
 
@@ -60,4 +59,3 @@ governance:
   runtime_is_observed_state: true
 
   reconciliation_required: true
-  

@@ -1,0 +1,8 @@
+resource_types:
+  - service
+  - database
+  - bucket
+  - secret
+  - network
+  - volume
+  - capability

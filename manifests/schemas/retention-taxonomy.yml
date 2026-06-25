@@ -1,0 +1,5 @@
+retention_classes:
+  - 30d
+  - 90d
+  - 365d
+  - 7y

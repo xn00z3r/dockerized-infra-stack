@@ -1,4 +1,40 @@
 owners:
-  - platform-team
-  - security-team
-  - devops-team
+
+  platform-team:
+
+    description: >
+      Owns and operates shared platform services
+      consumed by application teams.
+
+    responsibilities:
+
+      - platform-services
+      - databases
+      - storage
+      - networking
+
+  security-team:
+
+    description: >
+      Owns security governance, policies,
+      secrets management, and compliance controls.
+
+    responsibilities:
+
+      - vault
+      - secrets
+      - certificates
+      - security-policies
+
+  devops-team:
+
+    description: >
+      Owns CI/CD platform, automation,
+      deployment tooling, and operational workflows.
+
+    responsibilities:
+
+      - gitlab
+      - runners
+      - automation
+      - deployment-pipelines

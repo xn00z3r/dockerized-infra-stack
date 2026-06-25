@@ -3,10 +3,10 @@
 # =============================================================================
 
 .PHONY: init up up-continue down restart status backup backup-remote \
-        purge-mysql verify-mysql verify-mysql-backup restore-mysql \
-        backup-mysql \
-        purge-postgresql verify-postgresql restore-postgresql verify-postgresql-backup \
-        backup-postgresql \
+        purge-mysql verify-mysql verify-mysql-backup \
+        purge-postgresql verify-postgresql verify-postgresql-backup \
+        backup-mysql backup-postgresql \
+        restore-mysql restore-postgresql \
         new-service git-remote-setup logs shell help _check_networks
 
 -include _shared/.env

@@ -32,6 +32,17 @@ docker exec postgresql pg_dump \
 
 SHA256="$(sha256sum "${BACKUP_DIR}/${GITLAB_DB_NAME}.sql.gz" | awk '{print $1}')"
 
+cat > "${BACKUP_DIR}/metadata.json" <<EOF
+{
+  "backup_id": "${TIMESTAMP}",
+  "service": "postgresql",
+  "database": "${GITLAB_DB_NAME}",
+  "created_at": "$(date -Iseconds)",
+  "dump_file": "${GITLAB_DB_NAME}.sql.gz",
+  "sha256": "${SHA256}"
+}
+EOF
+
 echo "${SHA256}  ${GITLAB_DB_NAME}.sql.gz" > "${BACKUP_DIR}/sha256.txt"
 
 echo "  [postgresql] Backup complete: ${BACKUP_DIR}/${GITLAB_DB_NAME}.sql.gz"

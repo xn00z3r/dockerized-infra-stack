@@ -21,10 +21,10 @@ owners:
 
     responsibilities:
 
-      - vault
-      - secrets
-      - certificates
+      - secrets-management
+      - certificate-management
       - security-policies
+      - compliance
 
   devops-team:
 
@@ -34,7 +34,7 @@ owners:
 
     responsibilities:
 
-      - gitlab
-      - runners
+      - ci-cd
       - automation
-      - deployment-pipelines
+      - deployment
+      - build-pipelines

@@ -3,10 +3,8 @@
 # =============================================================================
 
 .PHONY: init up up-continue down restart status backup backup-remote \
-        purge-mysql verify-mysql verify-mysql-backup \
-        purge-postgresql verify-postgresql verify-postgresql-backup \
-        backup-mysql backup-postgresql \
-        restore-mysql restore-postgresql \
+        purge-mysql verify-mysql verify-mysql-backup restore-mysql backup-mysql \
+        purge-postgresql verify-postgresql verify-postgresql-backup restore-postgresql backup-postgresql \
         new-service git-remote-setup logs shell help _check_networks
 
 -include _shared/.env
@@ -19,8 +17,7 @@ export INFRA_STACK_ROOT
 
 COMPOSE := docker compose
 COMPOSE_ENV := --env-file _shared/.env
-
-COMPOSE_DOWN = docker compose --env-file _shared/.env
+COMPOSE_DOWN := docker compose --env-file _shared/.env
 
 MYSQL_COMPOSE      := $(COMPOSE) $(COMPOSE_ENV) -f mysql/docker-compose.yml
 POSTGRES_COMPOSE   := $(COMPOSE) $(COMPOSE_ENV) -f postgresql/docker-compose.yml
@@ -50,23 +47,23 @@ help:
 	@echo "    make restart              Stop then start semua service"
 	@echo ""
 	@echo "  MAINTENANCE:"
-	@echo "    make purge-mysql                Remove MySQL data"
-	@echo "    make verify-mysql               Validate MySQL bootstrap"
-	@echo "    make backup-mysql               Run MySQL backup only"
-	@echo "    make restore-mysql BACKUP=ts    Restore MySQL backup"
-	@echo "    make verify-mysql-backup        Full MySQL DR validation"
+	@echo "    make purge-mysql                 Remove MySQL data and volumes"
+	@echo "    make verify-mysql                Ultra-deep MySQL verification"
+	@echo "    make backup-mysql                Run MySQL backup only"
+	@echo "    make restore-mysql BACKUP=xxx    Restore MySQL backup"
+	@echo "    make verify-mysql-backup         End-to-end MySQL backup drill"
 	@echo ""
-	@echo "    make purge-postgresql           Remove PostgreSQL data"
-	@echo "    make verify-postgresql          Validate PostgreSQL bootstrap"
-	@echo "    make backup-postgresql          Run PostgreSQL backup only"
-	@echo "    make restore-postgresql BACKUP=ts"
-	@echo "    make verify-postgresql-backup   Full PostgreSQL DR validation"
+	@echo "    make purge-postgresql            Remove PostgreSQL data and volumes"
+	@echo "    make verify-postgresql           Ultra-deep PostgreSQL verification"
+	@echo "    make backup-postgresql           Run PostgreSQL backup only"
+	@echo "    make restore-postgresql BACKUP=xxx  Restore PostgreSQL backup"
+	@echo "    make verify-postgresql-backup    End-to-end PostgreSQL backup drill"
 	@echo ""
-	@echo "    make status               Tampilkan health status semua container"
-	@echo "    make backup               Jalankan backup semua service"
-	@echo "    make backup-remote        Push backup lokal ke remote storage"
-	@echo "    make logs SERVICE=xxx     View logs service tertentu"
-	@echo "    make shell SERVICE=xxx    Buka shell di container service tertentu"
+	@echo "    make status                      Tampilkan health status semua container"
+	@echo "    make backup                      Jalankan backup semua service"
+	@echo "    make backup-remote               Push backup lokal ke remote storage"
+	@echo "    make logs SERVICE=xxx            View logs service tertentu"
+	@echo "    make shell SERVICE=xxx           Buka shell di container service tertentu"
 	@echo ""
 	@echo "  DEVELOPMENT:"
 	@echo "    make new-service NAME=xxx TIER=xxx    Scaffold service baru"
@@ -175,26 +172,6 @@ purge-mysql:
 	@mkdir -p mysql/data
 	@echo "==> [purge-mysql] Done."
 
-verify-mysql:
-	@echo "==> [verify-mysql] Verifying compose rendering..."
-	@docker compose \
-		--env-file _shared/.env \
-		-f mysql/docker-compose.yml \
-		config | grep -q "MYSQL_DATABASE: default_db"
-	@echo "    Compose env rendering: PASS"
-	@docker inspect mysql \
-		--format='{{.State.Health.Status}}' \
-		| grep -q '^healthy$$'
-	@echo "    Healthcheck: PASS"
-	@docker exec mysql \
-		mysql \
-		-uroot \
-		-p"$$MYSQL_ROOT_PASSWORD" \
-		-Nse "SHOW DATABASES" \
-		| grep -q "^default_db$$"
-	@echo "    Database bootstrap: PASS"
-	@echo "==> [verify-mysql] SUCCESS"
-
 backup-mysql:
 	@bash _shared/scripts/backup/mysql.sh "$$(date +%Y-%m-%d_%H-%M-%S)"
 
@@ -205,6 +182,9 @@ restore-mysql:
 		exit 1; \
 	fi
 	@bash _shared/scripts/backup/restore-mysql.sh "$(BACKUP)"
+
+verify-mysql:
+	@bash _shared/scripts/verify/verify-mysql.sh
 
 verify-mysql-backup:
 	@bash _shared/scripts/backup/verify-mysql-backup.sh
@@ -218,80 +198,22 @@ purge-postgresql:
 	@mkdir -p postgresql/data
 	@echo "==> [purge-postgresql] Done."
 
-verify-postgresql:
-	@echo "==> [verify-postgresql] Verifying compose rendering..."
-	@docker compose \
-		--env-file _shared/.env \
-		-f postgresql/docker-compose.yml \
-		config | grep -q "POSTGRES_DB: postgres"
-	@docker compose \
-		--env-file _shared/.env \
-		-f postgresql/docker-compose.yml \
-		config | grep -q "PGDATA: /var/lib/postgresql/data/pgdata"
-	@echo "    Compose env rendering: PASS"
-
-	@docker inspect postgresql \
-		--format='{{.HostConfig.Memory}}' \
-		| grep -q '^2147483648$$'
-	@docker inspect postgresql \
-		--format='{{.HostConfig.NanoCpus}}' \
-		| grep -q '^1000000000$$'
-	@echo "    Resource contract: PASS"
-
-	@docker inspect postgresql \
-		--format='{{json .NetworkSettings.Networks}}' \
-		| grep -q '"infra-backend-net"'
-	@! docker inspect postgresql \
-		--format='{{json .NetworkSettings.Networks}}' \
-		| grep -q 'infra-proxy-net'
-	@echo "    Network contract: PASS"
-
-	@docker inspect postgresql \
-		--format='{{.HostConfig.RestartPolicy.Name}}' \
-		| grep -q '^unless-stopped$$'
-	@echo "    Cold reboot policy: PASS"
-
-	@docker exec postgresql getent hosts "$(GITLAB_FQDN)" >/dev/null
-	@echo "    DNS contract: PASS"
-
-	@docker inspect postgresql \
-		--format='{{.State.Health.Status}}' \
-		| grep -q '^healthy$$'
-	@echo "    Healthcheck: PASS"
-
-	@docker exec postgresql \
-		psql -U "$(POSTGRES_USER)" -d "$(GITLAB_DB_NAME)" \
-		-tAc "SELECT 1 FROM pg_database WHERE datname='$(GITLAB_DB_NAME)';" \
-		| grep -q '^1$$'
-	@echo "    Bootstrap database: PASS"
-
-	@docker exec postgresql \
-		psql -U "$(POSTGRES_USER)" -d "$(GITLAB_DB_NAME)" \
-		-tAc "SELECT pg_encoding_to_char(encoding) || '|' || datcollate || '|' || datctype FROM pg_database WHERE datname='$(GITLAB_DB_NAME)';" \
-		| grep -q '^UTF8|en_US.UTF-8|en_US.UTF-8$$'
-	@echo "    Charset & collation: PASS"
-
-	@docker compose \
-		--env-file _shared/.env \
-		-f postgresql/docker-compose.yml \
-		config | grep -q "TZ: Asia/Jakarta"
-	@echo "    Timezone contract: PASS"
-
-	@echo "    TLS readiness: SKIPPED (no explicit PostgreSQL TLS contract in repo yet)"
-	@echo "==> [verify-postgresql] SUCCESS"
-
 backup-postgresql:
 	@bash _shared/scripts/backup/postgresql.sh "$$(date +%Y-%m-%d_%H-%M-%S)"
 
-verify-postgresql-backup:
-	@bash _shared/scripts/backup/verify-postgresql-backup.sh
-
 restore-postgresql:
 	@if [ -z "$(BACKUP)" ]; then \
-		echo "Usage: make restore-postgresql BACKUP=<timestamp>"; \
+		echo "ERROR: BACKUP required"; \
+		echo "Usage: make restore-postgresql BACKUP=2026-06-25_11-46-44"; \
 		exit 1; \
 	fi
 	@bash _shared/scripts/backup/restore-postgresql.sh "$(BACKUP)"
+
+verify-postgresql:
+	@bash _shared/scripts/verify/verify-postgresql.sh
+
+verify-postgresql-backup:
+	@bash _shared/scripts/backup/verify-postgresql-backup.sh
 
 status:
 	@echo ""

@@ -4,7 +4,9 @@
 
 .PHONY: init up up-continue down restart status backup backup-remote \
         purge-mysql verify-mysql verify-mysql-backup restore-mysql \
+        backup-mysql \
         purge-postgresql verify-postgresql restore-postgresql verify-postgresql-backup \
+        backup-postgresql \
         new-service git-remote-setup logs shell help _check_networks
 
 -include _shared/.env
@@ -48,14 +50,18 @@ help:
 	@echo "    make restart              Stop then start semua service"
 	@echo ""
 	@echo "  MAINTENANCE:"
-	@echo "    make purge-mysql          Remove MySQL data and volumes"
-	@echo "    make verify-mysql         Validate MySQL bootstrap"
-	@echo "    make verify-mysql-backup  End-to-end MySQL backup drill"
-	@echo "    make restore-mysql BACKUP=xxx  Restore MySQL backup"
-	@echo "    make purge-postgresql     Remove PostgreSQL data and volumes"
-	@echo "    make verify-postgresql    Validate PostgreSQL bootstrap/contracts"
-	@echo "    make verify-postgresql-backup  End-to-end PostgreSQL backup drill"
-	@echo "    make restore-postgresql BACKUP=xxx  Restore PostgreSQL backup"
+	@echo "    make purge-mysql                Remove MySQL data"
+	@echo "    make verify-mysql               Validate MySQL bootstrap"
+	@echo "    make backup-mysql               Run MySQL backup only"
+	@echo "    make restore-mysql BACKUP=ts    Restore MySQL backup"
+	@echo "    make verify-mysql-backup        Full MySQL DR validation"
+	@echo ""
+	@echo "    make purge-postgresql           Remove PostgreSQL data"
+	@echo "    make verify-postgresql          Validate PostgreSQL bootstrap"
+	@echo "    make backup-postgresql          Run PostgreSQL backup only"
+	@echo "    make restore-postgresql BACKUP=ts"
+	@echo "    make verify-postgresql-backup   Full PostgreSQL DR validation"
+	@echo ""
 	@echo "    make status               Tampilkan health status semua container"
 	@echo "    make backup               Jalankan backup semua service"
 	@echo "    make backup-remote        Push backup lokal ke remote storage"
@@ -189,15 +195,19 @@ verify-mysql:
 	@echo "    Database bootstrap: PASS"
 	@echo "==> [verify-mysql] SUCCESS"
 
-verify-mysql-backup:
-	@bash _shared/scripts/backup/verify-mysql-backup.sh
+backup-mysql:
+	@bash _shared/scripts/backup/mysql.sh "$$(date +%Y-%m-%d_%H-%M-%S)"
 
 restore-mysql:
 	@if [ -z "$(BACKUP)" ]; then \
-		echo "Usage: make restore-mysql BACKUP=<timestamp>"; \
+		echo "ERROR: BACKUP required"; \
+		echo "Usage: make restore-mysql BACKUP=2026-06-25_11-46-44"; \
 		exit 1; \
 	fi
 	@bash _shared/scripts/backup/restore-mysql.sh "$(BACKUP)"
+
+verify-mysql-backup:
+	@bash _shared/scripts/backup/verify-mysql-backup.sh
 
 purge-postgresql:
 	@echo "==> [purge-postgresql] Stopping PostgreSQL..."
@@ -269,6 +279,9 @@ verify-postgresql:
 
 	@echo "    TLS readiness: SKIPPED (no explicit PostgreSQL TLS contract in repo yet)"
 	@echo "==> [verify-postgresql] SUCCESS"
+
+backup-postgresql:
+	@bash _shared/scripts/backup/postgresql.sh "$$(date +%Y-%m-%d_%H-%M-%S)"
 
 verify-postgresql-backup:
 	@bash _shared/scripts/backup/verify-postgresql-backup.sh

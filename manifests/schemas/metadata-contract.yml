@@ -2,10 +2,78 @@ contract:
   name: governance-metadata-contract
   version: v1.2
 
+contract:
+  name: governance-metadata-contract
+  version: v1.2
+
 description: >
-    Defines governance metadata validation rules,
-    taxonomy references,
-    and authoritative governance model.
+  Defines governance metadata validation rules,
+  taxonomy references,
+  and authoritative governance model.
+
+rules:
+
+  resource_id:
+    required: true
+    unique: true
+    immutable: true
+
+  resource_type:
+    required: true
+
+  owner:
+    required: true
+
+  lifecycle:
+    required: true
+
+  criticality:
+    required: true
+
+  created_at:
+    required: true
+    immutable: true
+
+  updated_at:
+    required: true
+
+allowed_resource_types:
+
+  - service
+  - database
+  - bucket
+  - secret
+  - network
+  - volume
+  - capability
+
+taxonomy:
+
+  resource_type:
+    source: resource-type-taxonomy.yml
+
+  owner:
+    source: owner-taxonomy.yml
+
+  lifecycle:
+    source: lifecycle-taxonomy.yml
+
+  criticality:
+    source: criticality-taxonomy.yml
+
+  retention:
+    source: retention-taxonomy.yml
+    
+
+governance:
+
+  authoritative_source: git
+
+  runtime_is_observed_state: true
+
+  reconciliation_required: true
+
+  minimum_supported_schema_version: v1.2
 
 rules:
 

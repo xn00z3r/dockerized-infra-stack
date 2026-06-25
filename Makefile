@@ -3,7 +3,7 @@
 # =============================================================================
 
 .PHONY: init up up-continue down restart status backup backup-remote \
-        purge-mysql verify-mysql \
+        purge-mysql verify-mysql verify-mysql-backup \
         new-service git-remote-setup logs shell help _check_networks
 
 -include _shared/.env
@@ -210,6 +210,9 @@ backup:
 	@echo "==> [backup] Cleaning backups older than 7 days..."
 	@find /data/backups -maxdepth 2 -type d -mtime +7 -exec rm -rf {} + 2>/dev/null || true
 	@echo "==> [backup] Done. Location: /data/backups/"
+
+verify-mysql-backup:
+	@bash _shared/scripts/backup/verify-mysql-backup.sh
 
 restore-mysql:
 	@if [ -z "$(BACKUP)" ]; then \

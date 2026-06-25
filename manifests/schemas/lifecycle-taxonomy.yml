@@ -1,0 +1,7 @@
+lifecycle_states:
+  - proposed
+  - active
+  - deprecated
+  - retired
+  - archived
+  - purged

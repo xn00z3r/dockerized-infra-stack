@@ -40,18 +40,14 @@ services:
     mem_limit: ${RUNNER_MEM_LIMIT}
     cpus: ${RUNNER_CPUS}
     healthcheck:
-      # Health criteria:
-      # 1. PostgreSQL menerima koneksi
-      # 2. Database GitLab yang didefinisikan pada GITLAB_DB_NAME benar-benar ada
-      test:
-        [
-          "CMD-SHELL",
-          "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB} && psql -U ${POSTGRES_USER} -lqt | cut -d '|' -f1 | xargs -n1 | grep -Fxq '${GITLAB_DB_NAME}'"
-        ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 60s
+      # gitlab-runner verify: cek apakah runner terdaftar dan komunikasi dengan GitLab OK
+      # Exit 0: runner valid. Exit non-0: belum register atau GitLab tidak reachable.
+      # Runner tidak akan healthy sampai registrasi dilakukan — ini expected behavior.
+      test: ["CMD", "gitlab-runner", "verify"]
+      interval: 60s
+      timeout: 30s
+      retries: 3
+      start_period: 30s
 
     # ---- Observability (uncomment saat Loki/Prometheus stack deployed) ----
     # labels:

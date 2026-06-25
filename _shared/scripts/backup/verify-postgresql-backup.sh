@@ -103,7 +103,6 @@ if [ "${RESULT}" = "1" ]; then
 }
 EOF
 
-    # Optional cleanup: hapus sentinel dari live DB setelah verification selesai
     docker exec postgresql psql \
       -U "${POSTGRES_USER}" \
       -d "${GITLAB_DB_NAME}" \

@@ -3,7 +3,8 @@
 # =============================================================================
 
 .PHONY: init up up-continue down restart status backup backup-remote \
-        purge-mysql verify-mysql verify-mysql-backup \
+        purge-mysql verify-mysql verify-mysql-backup restore-mysql \
+        purge-postgresql verify-postgresql restore-postgresql verify-postgresql-backup \
         new-service git-remote-setup logs shell help _check_networks
 
 -include _shared/.env
@@ -47,8 +48,14 @@ help:
 	@echo "    make restart              Stop then start semua service"
 	@echo ""
 	@echo "  MAINTENANCE:"
-	@echo "    make purge-mysql         Remove MySQL data and volumes"
-	@echo "    make verify-mysql        Validate MySQL bootstrap"
+	@echo "    make purge-mysql          Remove MySQL data and volumes"
+	@echo "    make verify-mysql         Validate MySQL bootstrap"
+	@echo "    make verify-mysql-backup  End-to-end MySQL backup drill"
+	@echo "    make restore-mysql BACKUP=xxx  Restore MySQL backup"
+	@echo "    make purge-postgresql     Remove PostgreSQL data and volumes"
+	@echo "    make verify-postgresql    Validate PostgreSQL bootstrap/contracts"
+	@echo "    make verify-postgresql-backup  End-to-end PostgreSQL backup drill"
+	@echo "    make restore-postgresql BACKUP=xxx  Restore PostgreSQL backup"
 	@echo "    make status               Tampilkan health status semua container"
 	@echo "    make backup               Jalankan backup semua service"
 	@echo "    make backup-remote        Push backup lokal ke remote storage"
@@ -86,7 +93,7 @@ up: _check_networks
 		exit 1; }
 	@docker cp \
 		step-ca:/home/step/certs/root_ca.crt \
-		traefik/config/certs/root_ca.crt || { \					
+		traefik/config/certs/root_ca.crt || { \
 			echo "ERROR: failed to retrieve root_ca.crt from step-ca"; \
 			exit 1; }
 	@test -f traefik/config/certs/root_ca.crt || { \
@@ -182,6 +189,97 @@ verify-mysql:
 	@echo "    Database bootstrap: PASS"
 	@echo "==> [verify-mysql] SUCCESS"
 
+verify-mysql-backup:
+	@bash _shared/scripts/backup/verify-mysql-backup.sh
+
+restore-mysql:
+	@if [ -z "$(BACKUP)" ]; then \
+		echo "Usage: make restore-mysql BACKUP=<timestamp>"; \
+		exit 1; \
+	fi
+	@bash _shared/scripts/backup/restore-mysql.sh "$(BACKUP)"
+
+purge-postgresql:
+	@echo "==> [purge-postgresql] Stopping PostgreSQL..."
+	@$(POSTGRES_COMPOSE) down -v --remove-orphans || true
+	@echo "==> [purge-postgresql] Removing postgresql/data contents..."
+	@sudo rm -rf postgresql/data/*
+	@echo "==> [purge-postgresql] Recreating postgresql/data..."
+	@mkdir -p postgresql/data
+	@echo "==> [purge-postgresql] Done."
+
+verify-postgresql:
+	@echo "==> [verify-postgresql] Verifying compose rendering..."
+	@docker compose \
+		--env-file _shared/.env \
+		-f postgresql/docker-compose.yml \
+		config | grep -q "POSTGRES_DB: postgres"
+	@docker compose \
+		--env-file _shared/.env \
+		-f postgresql/docker-compose.yml \
+		config | grep -q "PGDATA: /var/lib/postgresql/data/pgdata"
+	@echo "    Compose env rendering: PASS"
+
+	@docker inspect postgresql \
+		--format='{{.HostConfig.Memory}}' \
+		| grep -q '^2147483648$$'
+	@docker inspect postgresql \
+		--format='{{.HostConfig.NanoCpus}}' \
+		| grep -q '^1000000000$$'
+	@echo "    Resource contract: PASS"
+
+	@docker inspect postgresql \
+		--format='{{json .NetworkSettings.Networks}}' \
+		| grep -q '"infra-backend-net"'
+	@! docker inspect postgresql \
+		--format='{{json .NetworkSettings.Networks}}' \
+		| grep -q 'infra-proxy-net'
+	@echo "    Network contract: PASS"
+
+	@docker inspect postgresql \
+		--format='{{.HostConfig.RestartPolicy.Name}}' \
+		| grep -q '^unless-stopped$$'
+	@echo "    Cold reboot policy: PASS"
+
+	@docker exec postgresql getent hosts "$(GITLAB_FQDN)" >/dev/null
+	@echo "    DNS contract: PASS"
+
+	@docker inspect postgresql \
+		--format='{{.State.Health.Status}}' \
+		| grep -q '^healthy$$'
+	@echo "    Healthcheck: PASS"
+
+	@docker exec postgresql \
+		psql -U "$(POSTGRES_USER)" -d "$(GITLAB_DB_NAME)" \
+		-tAc "SELECT 1 FROM pg_database WHERE datname='$(GITLAB_DB_NAME)';" \
+		| grep -q '^1$$'
+	@echo "    Bootstrap database: PASS"
+
+	@docker exec postgresql \
+		psql -U "$(POSTGRES_USER)" -d "$(GITLAB_DB_NAME)" \
+		-tAc "SELECT pg_encoding_to_char(encoding) || '|' || datcollate || '|' || datctype FROM pg_database WHERE datname='$(GITLAB_DB_NAME)';" \
+		| grep -q '^UTF8|en_US.UTF-8|en_US.UTF-8$$'
+	@echo "    Charset & collation: PASS"
+
+	@docker compose \
+		--env-file _shared/.env \
+		-f postgresql/docker-compose.yml \
+		config | grep -q "TZ: Asia/Jakarta"
+	@echo "    Timezone contract: PASS"
+
+	@echo "    TLS readiness: SKIPPED (no explicit PostgreSQL TLS contract in repo yet)"
+	@echo "==> [verify-postgresql] SUCCESS"
+
+verify-postgresql-backup:
+	@bash _shared/scripts/backup/verify-postgresql-backup.sh
+
+restore-postgresql:
+	@if [ -z "$(BACKUP)" ]; then \
+		echo "Usage: make restore-postgresql BACKUP=<timestamp>"; \
+		exit 1; \
+	fi
+	@bash _shared/scripts/backup/restore-postgresql.sh "$(BACKUP)"
+
 status:
 	@echo ""
 	@echo "==> Container Health Status:"
@@ -211,16 +309,6 @@ backup:
 	@find /data/backups -maxdepth 2 -type d -mtime +7 -exec rm -rf {} + 2>/dev/null || true
 	@echo "==> [backup] Done. Location: /data/backups/"
 
-verify-mysql-backup:
-	@bash _shared/scripts/backup/verify-mysql-backup.sh
-
-restore-mysql:
-	@if [ -z "$(BACKUP)" ]; then \
-		echo "Usage: make restore-mysql BACKUP=<timestamp>"; \
-		exit 1; \
-	fi
-	@bash _shared/scripts/backup/restore-mysql.sh "$(BACKUP)"
-
 backup-remote:
 	@echo "==> [backup-remote] Not yet implemented."
 	@echo "    Manual: rclone sync /data/backups remote:infra-backups"
@@ -233,9 +321,9 @@ logs:
 		exit 1; \
 	fi
 	docker compose \
-    --env-file _shared/.env \
-    -f $(SERVICE)/docker-compose.yml \
-    logs -f --tail=100
+		--env-file _shared/.env \
+		-f $(SERVICE)/docker-compose.yml \
+		logs -f --tail=100
 
 shell:
 	@if [ -z "$(SERVICE)" ]; then \

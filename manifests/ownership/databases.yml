@@ -1,0 +1,7 @@
+databases:
+
+  db-mysql:
+    owner: platform-team
+
+  db-postgresql:
+    owner: platform-team

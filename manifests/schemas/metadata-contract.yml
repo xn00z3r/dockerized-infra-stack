@@ -50,6 +50,9 @@ taxonomy:
   retention:
     source: retention-taxonomy.yml
 
+  dependency:
+    source: dependency-taxonomy.yml
+
 governance:
 
   authoritative_source: git

@@ -1,0 +1,13 @@
+databases:
+
+  db-mysql:
+    name: mysql
+    resource_type: database
+    created_at: "2026-06-26"
+    updated_at: "2026-06-26"
+
+  db-postgresql:
+    name: postgresql
+    resource_type: database
+    created_at: "2026-06-26"
+    updated_at: "2026-06-26"

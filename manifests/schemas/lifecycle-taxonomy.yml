@@ -7,45 +7,31 @@ description: >
   for all governed resources.
 
 lifecycle_states:
-
   proposed:
-
     description: >
       Resource has been proposed but is not yet approved
       for operational use.
-
   active:
-
     description: >
       Resource is approved, supported,
       and operational.
-
   deprecated:
-
     description: >
       Resource remains operational but should
       no longer be adopted for new workloads.
-
   retired:
-
     description: >
       Resource has been removed from active operation
       while governance metadata is retained.
-
   archived:
-
     description: >
       Resource metadata is retained
       for historical or audit purposes.
-
   purged:
-
     description: >
       Resource and its governance metadata
       are permanently removed.
 
 governance:
-
   authoritative_source: git
-
   extensible: false

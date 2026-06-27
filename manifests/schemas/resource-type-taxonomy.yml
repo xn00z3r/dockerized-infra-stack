@@ -1,8 +1,29 @@
+taxonomy:
+  name: resource-type-taxonomy
+  version: v1.1
+
+description: >
+  Defines all supported resource types
+  managed by the governance platform.
+
 resource_types:
+
   - service
+
   - database
+
   - bucket
+
   - secret
+
   - network
+
   - volume
+
   - capability
+
+governance:
+
+  authoritative_source: git
+
+  extensible: false

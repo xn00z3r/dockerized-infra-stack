@@ -8,44 +8,36 @@ description: >
   of the dependency types defined in this taxonomy.
 
 dependency_types:
-
   runtime:
     description: >
       Required during normal application or service execution.
       Without this dependency, the consumer cannot operate correctly.
-
   bootstrap:
     description: >
       Required only during provisioning, initialization,
       installation, or deployment.
-
   storage:
     description: >
       Provides persistent storage required by the consumer.
-
   secret:
     description: >
       Provides secrets, credentials, keys,
       or other confidential configuration.
-
   certificate:
     description: >
       Provides certificates, PKI services,
       or trust establishment.
-
   ingress:
     description: >
       Provides inbound access routing,
       reverse proxy,
       or load-balancing capabilities.
-
   artifact:
     description: >
       Provides software packages,
       container images,
       binaries,
       or build artifacts.
-
   observability:
     description: >
       Provides logging,
@@ -53,7 +45,6 @@ dependency_types:
       tracing,
       monitoring,
       or alerting capabilities.
-
   protection:
     description: >
       Provides backup,

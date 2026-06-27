@@ -1,68 +1,55 @@
-taxonomy:
-  name: dependency-taxonomy
+contract:
+  name: governance-dependency-contract
   version: v1
 
 description: >
-  Defines the authoritative taxonomy for governance dependencies.
-  Every dependency declared in the governance registry must use one
-  of the dependency types defined in this taxonomy.
-
-dependency_types:
-
-  runtime:
-    description: >
-      Required during normal application or service execution.
-      Without this dependency, the consumer cannot operate correctly.
-
-  bootstrap:
-    description: >
-      Required only during provisioning, initialization,
-      installation, or deployment.
-
-  storage:
-    description: >
-      Provides persistent storage required by the consumer.
-
-  secret:
-    description: >
-      Provides secrets, credentials, keys,
-      or other confidential configuration.
-
-  certificate:
-    description: >
-      Provides certificates, PKI services,
-      or trust establishment.
-
-  ingress:
-    description: >
-      Provides inbound access routing,
-      reverse proxy,
-      or load-balancing capabilities.
-
-  artifact:
-    description: >
-      Provides software packages,
-      container images,
-      binaries,
-      or build artifacts.
-
-  observability:
-    description: >
-      Provides logging,
-      metrics,
-      tracing,
-      monitoring,
-      or alerting capabilities.
-
-  protection:
-    description: >
-      Provides backup,
-      restore,
-      disaster recovery,
-      or other data protection capabilities.
+  Defines validation rules for governance dependency
+  relationships between managed resources.
 
 rules:
+
+  dependency_id:
+    required: true
+    unique: true
+    immutable: true
+
+  consumer:
+    required: true
+    inventory_reference: true
+
+  provider:
+    required: true
+    inventory_reference: true
 
   dependency_type:
     required: true
     taxonomy_controlled: true
+
+  required:
+    required: true
+    data_type: boolean
+
+validation:
+
+  consumer_must_exist: true
+
+  provider_must_exist: true
+
+  consumer_must_not_equal_provider: true
+
+  dependency_type_must_exist: true
+
+taxonomy:
+
+  dependency:
+    source: dependency-taxonomy.yml
+
+governance:
+
+  authoritative_source: git
+
+  runtime_is_observed_state: true
+
+  reconciliation_required: true
+
+  minimum_supported_schema_version: v1

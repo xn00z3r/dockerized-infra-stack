@@ -7,52 +7,38 @@ description: >
   for all governed platform resources.
 
 owners:
-
   platform-team:
-
     description: >
       Owns and operates shared platform services
       consumed by application teams.
-
     responsibilities:
-
       - platform-services
       - databases
       - storage
       - networking
-
   security-team:
-
     description: >
       Owns security governance,
       secrets management,
       certificate management,
       and compliance controls.
-
     responsibilities:
-
       - secrets-management
       - certificate-management
       - security-policies
       - compliance
-
   devops-team:
-
     description: >
       Owns CI/CD platform,
       automation,
       deployment tooling,
       and operational workflows.
-
     responsibilities:
-
       - ci-cd
       - automation
       - deployment
       - build-pipelines
 
 governance:
-
   authoritative_source: git
-
   extensible: false

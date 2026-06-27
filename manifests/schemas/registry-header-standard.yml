@@ -1,22 +1,49 @@
 standard:
   name: governance-registry-header-standard
-  version: v1.0
+  version: v1.1
 
 description: >
   Defines the standard document header
-  used by every governance registry.
+  required for every governance registry.
+  The header provides schema identification,
+  registry provenance,
+  and review metadata to support
+  governance validation and automation.
 
 header:
   schema_version:
     required: true
+    description: >
+      Declares the schema version
+      implemented by the registry document.
+      Validators must reject unsupported versions.
   generated_by:
     required: true
+    description: >
+      Identifies the governance process,
+      automation,
+      or maintainer responsible
+      for generating or maintaining
+      the registry.
   last_reviewed:
     required: true
+    description: >
+      Records the most recent date
+      on which the registry
+      was reviewed for accuracy
+      and governance compliance.
 
 rules:
   registry_must_include_standard_header: true
   header_must_be_document_root: true
+
+validation:
+  schema_version:
+    non_empty: true
+  generated_by:
+    non_empty: true
+  last_reviewed:
+    required_date_format: "YYYY-MM-DD"
 
 governance:
   authoritative_source: git

@@ -1,0 +1,29 @@
+schema_version: v1
+generated_by: governance
+last_reviewed: "2026-06-27"
+
+services:
+  svc-gitlab:
+    criticality: tier-1
+  svc-gitlab-runner:
+    criticality: tier-2
+  svc-mysql:
+    criticality: tier-0
+  svc-postgresql:
+    criticality: tier-0
+  svc-postfix:
+    criticality: tier-2
+  svc-seaweedfs:
+    criticality: tier-1
+  svc-step-ca:
+    criticality: tier-1
+  svc-traefik:
+    criticality: tier-0
+  svc-vault:
+    criticality: tier-1
+
+databases:
+  db-mysql:
+    criticality: tier-0
+  db-postgresql:
+    criticality: tier-0

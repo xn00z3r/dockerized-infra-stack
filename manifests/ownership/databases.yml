@@ -1,13 +1,9 @@
 schema_version: v1
-
 generated_by: governance
-
-last_reviewed: "2026-06-26"
+last_reviewed: "2026-06-27"
 
 databases:
-
   db-mysql:
     owner: platform-team
-
   db-postgresql:
     owner: platform-team

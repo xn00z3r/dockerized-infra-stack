@@ -1,0 +1,49 @@
+contract:
+  name: governance-lifecycle-contract
+  version: v1.1
+
+description: >
+  Defines the validation contract
+  for lifecycle assignments
+  of governed resources.
+
+rules:
+
+  resource_id:
+    required: true
+
+  lifecycle:
+    required: true
+
+taxonomy:
+
+  lifecycle:
+    source: lifecycle-taxonomy.yml
+
+validation:
+
+  resource_id:
+
+    inventory_reference: true
+
+  lifecycle:
+
+    taxonomy_controlled: true
+
+cross_registry_validation:
+
+  resource_must_exist: true
+
+  lifecycle_must_exist: true
+
+governance:
+
+  authoritative_source: git
+
+  runtime_is_observed_state: true
+
+  reconciliation_required: true
+
+  minimum_supported_schema_version: v1.1
+
+  primary_resource_identifier: resource_id

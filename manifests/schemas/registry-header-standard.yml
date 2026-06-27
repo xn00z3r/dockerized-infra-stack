@@ -1,0 +1,22 @@
+standard:
+  name: governance-registry-header-standard
+  version: v1.0
+
+description: >
+  Defines the standard document header
+  used by every governance registry.
+
+header:
+  schema_version:
+    required: true
+  generated_by:
+    required: true
+  last_reviewed:
+    required: true
+
+rules:
+  registry_must_include_standard_header: true
+
+governance:
+  authoritative_source: git
+  extensible: false

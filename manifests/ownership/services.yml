@@ -1,34 +1,23 @@
 schema_version: v1
-
 generated_by: governance
-
-last_reviewed: "2026-06-26"
+last_reviewed: "2026-06-27"
 
 services:
-
   svc-gitlab:
     owner: devops-team
-
   svc-gitlab-runner:
     owner: devops-team
-
   svc-mysql:
     owner: platform-team
-
   svc-postgresql:
     owner: platform-team
-
   svc-postfix:
     owner: platform-team
-
   svc-seaweedfs:
     owner: platform-team
-
   svc-step-ca:
     owner: security-team
-
   svc-traefik:
     owner: platform-team
-
   svc-vault:
     owner: security-team

@@ -1,0 +1,55 @@
+contract:
+  name: governance-dependency-contract
+  version: v1
+
+description: >
+  Defines validation rules for governance dependency
+  relationships between managed resources.
+
+rules:
+
+  dependency_id:
+    required: true
+    unique: true
+    immutable: true
+
+  consumer:
+    required: true
+    inventory_reference: true
+
+  provider:
+    required: true
+    inventory_reference: true
+
+  dependency_type:
+    required: true
+    taxonomy_controlled: true
+
+  required:
+    required: true
+    data_type: boolean
+
+validation:
+
+  consumer_must_exist: true
+
+  provider_must_exist: true
+
+  consumer_must_not_equal_provider: true
+
+  dependency_type_must_exist: true
+
+taxonomy:
+
+  dependency:
+    source: dependency-taxonomy.yml
+
+governance:
+
+  authoritative_source: git
+
+  runtime_is_observed_state: true
+
+  reconciliation_required: true
+
+  minimum_supported_schema_version: v1

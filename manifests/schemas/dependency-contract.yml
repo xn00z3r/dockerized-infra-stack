@@ -7,65 +7,46 @@ description: >
   relationships between managed resources.
 
 rules:
-
   dependency_id:
     required: true
     unique: true
     immutable: true
-
   validation:
     consumer:
       inventory_reference:
         registry: inventory
-  
     provider:
       inventory_reference:
         registry: inventory
-  
     dependency_type:
       taxonomy_controlled: true
-
   dependency_type:
     required: true
-
   required:
     required: true
     data_type: boolean
 
 taxonomy:
-
   dependency:
     source: dependency-taxonomy.yml
 
 validation:
-
   consumer:
     inventory_reference: true
-
   provider:
     inventory_reference: true
-
   dependency_type:
     taxonomy_controlled: true
 
 cross_registry_validation:
-
   consumer_must_exist: true
-
   provider_must_exist: true
-
   consumer_must_not_equal_provider: true
-
   dependency_type_must_exist: true
 
 governance:
-
   authoritative_source: git
-
   runtime_is_observed_state: true
-
   reconciliation_required: true
-
   minimum_supported_schema_version: v1.1
-
   primary_dependency_identifier: dependency_id

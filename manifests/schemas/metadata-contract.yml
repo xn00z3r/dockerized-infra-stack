@@ -8,59 +8,41 @@ description: >
   and authoritative governance model.
 
 rules:
-
   resource_id:
     required: true
     unique: true
     immutable: true
-
   resource_type:
     required: true
-
   owner:
     required: true
-
   lifecycle:
     required: true
-
   criticality:
     required: true
-
   created_at:
     required: true
     immutable: true
-
   updated_at:
     required: true
 
 taxonomy:
-
   resource_type:
     source: resource-type-taxonomy.yml
-
   owner:
     source: owner-taxonomy.yml
-
   lifecycle:
     source: lifecycle-taxonomy.yml
-
   criticality:
     source: criticality-taxonomy.yml
-
   retention:
     source: retention-taxonomy.yml
-
   dependency:
     source: dependency-taxonomy.yml
 
 governance:
-
   authoritative_source: git
-
   runtime_is_observed_state: true
-
   reconciliation_required: true
-
   minimum_supported_schema_version: v1.2
-
   primary_resource_identifier: resource_id

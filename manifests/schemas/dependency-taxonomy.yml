@@ -62,7 +62,10 @@ dependency_types:
       or other data protection capabilities.
 
 rules:
-
   dependency_type:
     required: true
     taxonomy_controlled: true
+
+governance:
+  authoritative_source: git
+  extensible: false

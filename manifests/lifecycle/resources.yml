@@ -1,0 +1,25 @@
+services:
+  svc-gitlab:
+    lifecycle: active
+  svc-gitlab-runner:
+    lifecycle: active
+  svc-mysql:
+    lifecycle: active
+  svc-postgresql:
+    lifecycle: active
+  svc-postfix:
+    lifecycle: active
+  svc-seaweedfs:
+    lifecycle: active
+  svc-step-ca:
+    lifecycle: active
+  svc-traefik:
+    lifecycle: active
+  svc-vault:
+    lifecycle: active
+
+databases:
+  db-mysql:
+    lifecycle: active
+  db-postgresql:
+    lifecycle: active

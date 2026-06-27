@@ -16,6 +16,7 @@ header:
 
 rules:
   registry_must_include_standard_header: true
+  header_must_be_document_root: true
 
 governance:
   authoritative_source: git

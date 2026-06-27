@@ -1,3 +1,7 @@
+schema_version: v1
+generated_by: governance
+last_reviewed: "2026-06-27"
+
 services:
   svc-gitlab:
     lifecycle: active

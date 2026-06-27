@@ -1,17 +1,13 @@
 schema_version: v1
-
 generated_by: governance
-
-last_reviewed: "2026-06-26"
+last_reviewed: "2026-06-27"
 
 databases:
-
   db-mysql:
     name: mysql
     resource_type: database
     created_at: "2026-06-26"
     updated_at: "2026-06-26"
-
   db-postgresql:
     name: postgresql
     resource_type: database

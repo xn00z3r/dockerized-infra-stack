@@ -7,23 +7,14 @@ description: >
   managed by the governance platform.
 
 resource_types:
-
   - service
-
   - database
-
   - bucket
-
   - secret
-
   - network
-
   - volume
-
   - capability
 
 governance:
-
   authoritative_source: git
-
   extensible: false

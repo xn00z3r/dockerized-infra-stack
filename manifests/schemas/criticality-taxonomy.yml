@@ -3,14 +3,37 @@ taxonomy:
   version: v1.1
 
 description: >
-  Defines supported criticality levels
-  for governed resources.
+  Defines the authoritative criticality classification
+  for governed platform resources.
+  Criticality determines operational priority,
+  disaster recovery priority,
+  maintenance planning,
+  incident response,
+  and service governance.
 
 criticality_levels:
-  - tier-0
-  - tier-1
-  - tier-2
-  - tier-3
+  tier-0:
+    description: >
+      Platform-wide critical resource.
+      Failure causes severe outage
+      affecting multiple platform services
+      or shared infrastructure.
+  tier-1:
+    description: >
+      High critical resource.
+      Failure significantly impacts
+      one or more platform capabilities,
+      but the platform remains partially operational.
+  tier-2:
+    description: >
+      Medium critical resource.
+      Failure degrades platform functionality,
+      while core shared services remain available.
+  tier-3:
+    description: >
+      Low critical resource.
+      Failure has limited operational impact
+      and does not affect core platform availability.
 
 governance:
   authoritative_source: git

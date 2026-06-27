@@ -1,0 +1,29 @@
+contract:
+  name: retention-contract
+  version: v1
+
+description: >
+  Defines validation rules for the Retention Registry.
+  Every governed resource must declare a retention class
+  that references the authoritative Retention Taxonomy.
+
+rules:
+  resource_id:
+    required: true
+    inventory_reference: true
+  retention:
+    required: true
+    taxonomy_controlled: true
+
+cross_registry_validation:
+  inventory:
+    required: true
+    reference_key: resource_id
+
+taxonomy:
+  retention:
+    source: retention-taxonomy.yml
+
+governance:
+  authoritative_source: git
+  extensible: false

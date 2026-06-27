@@ -1,6 +1,6 @@
 standard:
   name: governance-registry-header-standard
-  version: v1.1
+  version: v1.2
 
 description: >
   Defines the standard document header
@@ -32,7 +32,6 @@ header:
       on which the registry
       was reviewed for accuracy
       and governance compliance.
-
 rules:
   registry_must_include_standard_header: true
   header_must_be_document_root: true
@@ -42,7 +41,10 @@ validation:
     non_empty: true
   generated_by:
     non_empty: true
+    allowed_values:
+      - governance
   last_reviewed:
+    non_empty: true
     required_date_format: "YYYY-MM-DD"
 
 governance:

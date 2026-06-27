@@ -1,0 +1,37 @@
+contract:
+  name: governance-criticality-contract
+  version: v1.0
+
+description: >
+  Defines validation rules for assigning
+  criticality classifications to governed resources.
+  Every governed resource must be assigned exactly one
+  criticality level defined by the criticality taxonomy.
+
+rules:
+  resource_id:
+    required: true
+  criticality:
+    required: true
+
+taxonomy:
+  criticality:
+    source: criticality-taxonomy.yml
+
+validation:
+  resource_id:
+    inventory_reference:
+      registry: inventory
+  criticality:
+    taxonomy_controlled: true
+
+cross_registry_validation:
+  resource_must_exist: true
+  criticality_must_exist: true
+
+governance:
+  authoritative_source: git
+  runtime_is_observed_state: true
+  reconciliation_required: true
+  minimum_supported_schema_version: v1.0
+  primary_resource_identifier: resource_id

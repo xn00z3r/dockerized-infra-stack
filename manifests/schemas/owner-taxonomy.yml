@@ -1,3 +1,11 @@
+taxonomy:
+  name: owner-taxonomy
+  version: v1.1
+
+description: >
+  Defines the authoritative ownership taxonomy
+  for all governed platform resources.
+
 owners:
 
   platform-team:
@@ -16,8 +24,10 @@ owners:
   security-team:
 
     description: >
-      Owns security governance, policies,
-      secrets management, and compliance controls.
+      Owns security governance,
+      secrets management,
+      certificate management,
+      and compliance controls.
 
     responsibilities:
 
@@ -29,8 +39,10 @@ owners:
   devops-team:
 
     description: >
-      Owns CI/CD platform, automation,
-      deployment tooling, and operational workflows.
+      Owns CI/CD platform,
+      automation,
+      deployment tooling,
+      and operational workflows.
 
     responsibilities:
 
@@ -38,3 +50,9 @@ owners:
       - automation
       - deployment
       - build-pipelines
+
+governance:
+
+  authoritative_source: git
+
+  extensible: false

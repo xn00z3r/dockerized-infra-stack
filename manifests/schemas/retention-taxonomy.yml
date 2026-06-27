@@ -1,5 +1,23 @@
+taxonomy:
+  name: retention-taxonomy
+  version: v1.1
+
+description: >
+  Defines supported retention classes
+  used by governed resources.
+
 retention_classes:
+
   - 30d
+
   - 90d
+
   - 365d
+
   - 7y
+
+governance:
+
+  authoritative_source: git
+
+  extensible: false

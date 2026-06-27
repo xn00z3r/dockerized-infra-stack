@@ -13,11 +13,17 @@ rules:
     unique: true
     immutable: true
 
-  consumer:
-    required: true
-
-  provider:
-    required: true
+  validation:
+    consumer:
+      inventory_reference:
+        registry: inventory
+  
+    provider:
+      inventory_reference:
+        registry: inventory
+  
+    dependency_type:
+      taxonomy_controlled: true
 
   dependency_type:
     required: true

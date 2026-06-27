@@ -1,0 +1,53 @@
+schema_version: v1
+
+dependencies:
+
+  dep-0001:
+
+    consumer: svc-gitlab
+
+    provider: svc-postgresql
+
+    dependency_type: runtime
+
+    required: true
+
+  dep-0002:
+
+    consumer: svc-gitlab
+
+    provider: svc-traefik
+
+    dependency_type: ingress
+
+    required: true
+
+  dep-0003:
+
+    consumer: svc-gitlab
+
+    provider: svc-postfix
+
+    dependency_type: runtime
+
+    required: false
+
+  dep-0004:
+
+    consumer: svc-gitlab
+
+    provider: svc-seaweedfs
+
+    dependency_type: storage
+
+    required: false
+
+  dep-0005:
+
+    consumer: svc-gitlab-runner
+
+    provider: svc-gitlab
+
+    dependency_type: runtime
+
+    required: true

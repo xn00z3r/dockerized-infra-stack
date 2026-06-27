@@ -1,59 +1,48 @@
 schema_version: v1
-
 generated_by: governance
-
-last_reviewed: "2026-06-26"
+last_reviewed: "2026-06-27"
 
 services:
-
   svc-gitlab:
     name: gitlab
     resource_type: service
     created_at: "2026-06-26"
     updated_at: "2026-06-26"
-
   svc-gitlab-runner:
     name: gitlab-runner
     resource_type: service
     created_at: "2026-06-26"
     updated_at: "2026-06-26"
-
   svc-mysql:
     name: mysql
     resource_type: service
     created_at: "2026-06-26"
     updated_at: "2026-06-26"
-
   svc-postgresql:
     name: postgresql
     resource_type: service
     created_at: "2026-06-26"
     updated_at: "2026-06-26"
-
   svc-postfix:
     name: postfix
     resource_type: service
     created_at: "2026-06-26"
     updated_at: "2026-06-26"
-
   svc-seaweedfs:
     name: seaweedfs
     resource_type: service
     created_at: "2026-06-26"
     updated_at: "2026-06-26"
-
   svc-step-ca:
     name: step-ca
     resource_type: service
     created_at: "2026-06-26"
     updated_at: "2026-06-26"
-
   svc-traefik:
     name: traefik
     resource_type: service
     created_at: "2026-06-26"
     updated_at: "2026-06-26"
-
   svc-vault:
     name: vault
     resource_type: service
